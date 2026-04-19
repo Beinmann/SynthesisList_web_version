@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   ReactFlow,
   Background,
@@ -19,46 +19,55 @@ import type { Rank, MonsterType } from './_data'
 
 const NODE_TYPES = { monster: MonsterNode }
 const MAX_DEPTH = 4
+const NODE_W = 180
+const NODE_H = 110
 
-function buildGraph(rootName: string, onMakeRoot: (name: string) => void) {
+function buildGraph(
+  rootName: string,
+  recipeIndices: Map<string, number>,
+  onMakeRoot: (name: string) => void,
+  onCycleRecipe: (nodeId: string, dir: 1 | -1) => void,
+) {
   const nodes: Node<MonsterNodeData>[] = []
   const edges: Edge[] = []
   const seen = new Set<string>()
 
-  function visit(name: string, depth: number, parentId: string | null, edgeId: string | null) {
+  function visit(name: string, depth: number, parentId: string | null, edgeLabel: string | null) {
     if (depth > MAX_DEPTH) return
     const key = name.toLowerCase()
-    const nodeId = edgeId ? `${edgeId}->${key}` : key
-
-    const monster = monsterByName.get(key)
-
-    const data: MonsterNodeData = {
-      name: monster?.name ?? name,
-      rank: (monster?.rank ?? '?') as Rank,
-      type: (monster?.type ?? 'material') as MonsterType,
-      onMakeRoot,
-    }
+    const nodeId = edgeLabel ? `${edgeLabel}:${key}` : key
 
     if (!seen.has(nodeId)) {
       seen.add(nodeId)
+      const monster = monsterByName.get(key)
+      const recipes = recipesByResult.get(key) ?? []
+      const recipeIndex = Math.min(recipeIndices.get(nodeId) ?? 0, Math.max(0, recipes.length - 1))
+
       nodes.push({
         id: nodeId,
         type: 'monster',
-        data,
+        data: {
+          name: monster?.name ?? name,
+          rank: (monster?.rank ?? '?') as Rank,
+          type: (monster?.type ?? 'material') as MonsterType,
+          nodeId,
+          recipeIndex,
+          recipeCount: recipes.length,
+          onMakeRoot,
+          onCycleRecipe,
+        },
         position: { x: 0, y: 0 },
       })
+
+      if (depth < MAX_DEPTH && recipes.length > 0) {
+        const r = recipes[recipeIndex]
+        visit(r.parent1, depth + 1, nodeId, `${nodeId}>p1`)
+        visit(r.parent2, depth + 1, nodeId, `${nodeId}>p2`)
+      }
     }
 
-    if (parentId && edgeId) {
-      edges.push({ id: edgeId, source: nodeId, target: parentId, style: { stroke: '#52525b' } })
-    }
-
-    if (depth < MAX_DEPTH) {
-      const recipes = recipesByResult.get(key) ?? []
-      recipes.forEach((r, i) => {
-        visit(r.parent1, depth + 1, nodeId, `${nodeId}-p1-${i}`)
-        visit(r.parent2, depth + 1, nodeId, `${nodeId}-p2-${i}`)
-      })
+    if (parentId && edgeLabel) {
+      edges.push({ id: edgeLabel, source: nodeId, target: parentId, style: { stroke: '#52525b' } })
     }
   }
 
@@ -66,74 +75,84 @@ function buildGraph(rootName: string, onMakeRoot: (name: string) => void) {
   return { nodes, edges }
 }
 
-// Simple top-down layout: position nodes by BFS level
 function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<MonsterNodeData>[] {
-  const children = new Map<string, string[]>()
-  const parents = new Map<string, string[]>()
+  const childrenOf = new Map<string, string[]>()
+  const parentOf = new Map<string, string>()
   for (const e of edges) {
-    const c = children.get(e.target) ?? []
+    const c = childrenOf.get(e.target) ?? []
     c.push(e.source)
-    children.set(e.target, c)
-    const p = parents.get(e.source) ?? []
-    p.push(e.target)
-    parents.set(e.source, p)
+    childrenOf.set(e.target, c)
+    parentOf.set(e.source, e.target)
   }
 
-  const roots = nodes.filter(n => !(parents.get(n.id)?.length))
-  const levels = new Map<string, number>()
-  const queue = roots.map(r => ({ id: r.id, level: 0 }))
+  // Assign depth level via BFS from roots
+  const roots = nodes.filter(n => !parentOf.has(n.id))
+  const depth = new Map<string, number>()
+  const queue = roots.map(r => ({ id: r.id, d: 0 }))
   while (queue.length) {
-    const { id, level } = queue.shift()!
-    if ((levels.get(id) ?? Infinity) <= level) continue
-    levels.set(id, level)
-    for (const child of children.get(id) ?? []) {
-      queue.push({ id: child, level: level + 1 })
+    const { id, d } = queue.shift()!
+    if (depth.has(id)) continue
+    depth.set(id, d)
+    for (const child of childrenOf.get(id) ?? []) queue.push({ id: child, d: d + 1 })
+  }
+
+  // Assign x positions via post-order traversal so parent centers over children
+  const x = new Map<string, number>()
+  let cursor = 0
+
+  function assignX(id: string) {
+    const children = childrenOf.get(id) ?? []
+    if (children.length === 0) {
+      x.set(id, cursor)
+      cursor += NODE_W
+    } else {
+      for (const c of children) assignX(c)
+      const xs = children.map(c => x.get(c)!)
+      x.set(id, (Math.min(...xs) + Math.max(...xs)) / 2)
     }
   }
+  for (const r of roots) assignX(r.id)
 
-  const byLevel = new Map<number, string[]>()
-  for (const [id, lvl] of levels) {
-    const arr = byLevel.get(lvl) ?? []
-    arr.push(id)
-    byLevel.set(lvl, arr)
-  }
-
-  const NODE_W = 160
-  const NODE_H = 100
-  const positions = new Map<string, { x: number; y: number }>()
-  for (const [lvl, ids] of byLevel) {
-    const total = ids.length
-    ids.forEach((id, i) => {
-      positions.set(id, {
-        x: (i - (total - 1) / 2) * NODE_W,
-        y: -lvl * NODE_H,
-      })
-    })
-  }
-
-  return nodes.map(n => ({ ...n, position: positions.get(n.id) ?? { x: 0, y: 0 } }))
+  return nodes.map(n => ({
+    ...n,
+    position: { x: x.get(n.id) ?? 0, y: -(depth.get(n.id) ?? 0) * NODE_H },
+  }))
 }
 
 export default function SynthesisViewer() {
   const [root, setRoot] = useState<string | null>(null)
+  const [recipeIndices, setRecipeIndices] = useState<Map<string, number>>(new Map())
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<MonsterNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
-  const handleSelect = useCallback((name: string) => {
-    setRoot(name)
-  }, [])
-
   const handleMakeRoot = useCallback((name: string) => {
     setRoot(name)
+    setRecipeIndices(new Map())
   }, [])
 
-  useMemo(() => {
+  const handleSelect = useCallback((name: string) => {
+    setRoot(name)
+    setRecipeIndices(new Map())
+  }, [])
+
+  const handleCycleRecipe = useCallback((nodeId: string, dir: 1 | -1) => {
+    setRecipeIndices(prev => {
+      const next = new Map(prev)
+      const key = nodeId.split(':').at(-1)!
+      const recipes = recipesByResult.get(key) ?? []
+      if (recipes.length < 2) return prev
+      const cur = next.get(nodeId) ?? 0
+      next.set(nodeId, (cur + dir + recipes.length) % recipes.length)
+      return next
+    })
+  }, [])
+
+  useEffect(() => {
     if (!root) return
-    const { nodes: rawNodes, edges: rawEdges } = buildGraph(root, handleMakeRoot)
-    const laid = layoutNodes(rawNodes, rawEdges)
-    setNodes(laid)
-    setEdges(rawEdges)
-  }, [root, handleMakeRoot, setNodes, setEdges])
+    const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, handleMakeRoot, handleCycleRecipe)
+    setNodes(layoutNodes(raw, raw2))
+    setEdges(raw2)
+  }, [root, recipeIndices, handleMakeRoot, handleCycleRecipe, setNodes, setEdges])
 
   return (
     <div className="flex flex-col gap-4">
@@ -169,7 +188,7 @@ export default function SynthesisViewer() {
       </div>
 
       <p className="text-xs text-zinc-600">
-        Tree shows up to {MAX_DEPTH} levels of parents. Nodes are colored by rank; borders by family type.
+        Tree shows up to {MAX_DEPTH} levels of parents. Use ‹ › on a node to cycle through alternative recipes.
       </p>
     </div>
   )

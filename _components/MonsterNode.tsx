@@ -29,7 +29,11 @@ export interface MonsterNodeData extends Record<string, unknown> {
   name: string
   rank: Rank
   type: MonsterType
+  nodeId: string
+  recipeIndex: number
+  recipeCount: number
   onMakeRoot: (name: string) => void
+  onCycleRecipe: (nodeId: string, dir: 1 | -1) => void
 }
 
 export default function MonsterNode({ data }: { data: MonsterNodeData }) {
@@ -37,19 +41,37 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
   const borderCls = typeColors[data.type] ?? 'border-zinc-600'
 
   return (
-    <div
-      className={`rounded-lg border-2 ${borderCls} bg-zinc-900 px-3 py-2 text-sm shadow-md min-w-[120px] cursor-pointer hover:brightness-125 transition-all`}
-      onClick={() => data.onMakeRoot(data.name)}
-      title="Click to make root"
-    >
+    <div className={`rounded-lg border-2 ${borderCls} bg-zinc-900 px-3 py-2 text-sm shadow-md min-w-[130px]`}>
       <Handle type="target" position={Position.Bottom} className="!bg-zinc-600" />
-      <div className="flex items-center gap-2">
+
+      <div
+        className="flex items-center gap-2 cursor-pointer hover:brightness-125 transition-all"
+        onClick={() => data.onMakeRoot(data.name)}
+        title="Click to make root"
+      >
         <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-bold ${rankCls}`}>
           {data.rank}
         </span>
         <span className="text-zinc-100 font-medium leading-tight">{data.name}</span>
       </div>
-      <div className="mt-1 text-[10px] text-zinc-500 capitalize">{data.type}</div>
+
+      <div className="mt-1 flex items-center justify-between">
+        <span className="text-[10px] text-zinc-500 capitalize">{data.type}</span>
+        {data.recipeCount > 1 && (
+          <div className="flex items-center gap-1 ml-2">
+            <button
+              onClick={e => { e.stopPropagation(); data.onCycleRecipe(data.nodeId, -1) }}
+              className="text-zinc-400 hover:text-zinc-100 text-xs px-1 leading-none"
+            >‹</button>
+            <span className="text-[10px] text-zinc-500">{data.recipeIndex + 1}/{data.recipeCount}</span>
+            <button
+              onClick={e => { e.stopPropagation(); data.onCycleRecipe(data.nodeId, 1) }}
+              className="text-zinc-400 hover:text-zinc-100 text-xs px-1 leading-none"
+            >›</button>
+          </div>
+        )}
+      </div>
+
       <Handle type="source" position={Position.Top} className="!bg-zinc-600" />
     </div>
   )
