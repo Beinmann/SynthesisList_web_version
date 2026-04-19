@@ -21,7 +21,7 @@ const NODE_TYPES = { monster: MonsterNode }
 const MAX_DEPTH = 4
 
 function buildGraph(rootName: string, onMakeRoot: (name: string) => void) {
-  const nodes: Node[] = []
+  const nodes: Node<MonsterNodeData>[] = []
   const edges: Edge[] = []
   const seen = new Set<string>()
 
@@ -67,7 +67,7 @@ function buildGraph(rootName: string, onMakeRoot: (name: string) => void) {
 }
 
 // Simple top-down layout: position nodes by BFS level
-function layoutNodes(nodes: Node[], edges: Edge[]): Node[] {
+function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<MonsterNodeData>[] {
   const children = new Map<string, string[]>()
   const parents = new Map<string, string[]>()
   for (const e of edges) {
@@ -116,7 +116,7 @@ function layoutNodes(nodes: Node[], edges: Edge[]): Node[] {
 
 export default function SynthesisViewer() {
   const [root, setRoot] = useState<string | null>(null)
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<MonsterNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
   const handleSelect = useCallback((name: string) => {

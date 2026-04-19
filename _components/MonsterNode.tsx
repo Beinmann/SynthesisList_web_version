@@ -25,7 +25,7 @@ const typeColors: Record<MonsterType, string> = {
   beast:    'border-orange-400',
 }
 
-export interface MonsterNodeData {
+export interface MonsterNodeData extends Record<string, unknown> {
   name: string
   rank: Rank
   type: MonsterType
