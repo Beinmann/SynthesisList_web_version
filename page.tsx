@@ -1,6 +1,4 @@
-import dynamic from 'next/dynamic'
-
-const SynthesisViewer = dynamic(() => import('./_components/SynthesisViewer'), { ssr: false })
+import SynthesisViewerLoader from './_components/SynthesisViewerLoader'
 
 export default function DqmJ2Page() {
   return (
@@ -10,7 +8,7 @@ export default function DqmJ2Page() {
         Interactive synthesis (breeding) tree for Dragon Quest Monsters: Joker 2.
         Search a monster to see all the parent combinations needed to create it.
       </p>
-      <SynthesisViewer />
+      <SynthesisViewerLoader />
     </div>
   )
 }
