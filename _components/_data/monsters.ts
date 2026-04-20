@@ -3922,5 +3922,2470 @@ export const monsters: Monster[] = [
     "tags": [
       "synth"
     ]
+  },
+  {
+    "name": "Rhapthorne 2 part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dhoulmagus part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Marquisdeleon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dorsalfiend part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Conklave X part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Green Dragon Lv.20",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Darkoniumslime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Skeleton Lv.20",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "DonMole part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Conklave X",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Snowbird part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Kingsquid part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Reddragon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Nightclubber part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Archdemon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dhoulmagus part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Exorsus part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Ruin part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Riptide part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Black Dragon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goodybag X",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Grandpaslime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Heligator part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Chimaera X Lv.50",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Aquarion part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Gemon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goodybag X part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Gripevine part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Grimrider part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dancing Flame part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Gargoyle part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dessertdemon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "RigorMortex part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Boe part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Greatargonlizard part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Skeleton X part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Wailin'weed part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Skeleton X part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Slime X part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Teeny Sanguini X",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mortamor part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Moosifer part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mimic part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Baramos part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Boss Troll part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Ruin part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Leopold part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Gripevine part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Kingsquid part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Fallenpriest part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Slime XY part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Slime Lv.20",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Boh part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Zoma part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Heligator part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Pazuzu part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Boh part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Nimzo part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Killingmachine part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Marquisdeleon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Reddragon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mortella part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Murdaw part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Gracos part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "metal dragon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Frou-fry part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Beshemoth Slime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Gemon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Grandpaslime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dracolord part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "King cure slime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Bonebaron part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dragovianlord part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Hargon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Xenlon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Xenlon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Roseguardin part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Teeny Sanguini X part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Snowbird part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Phantomswordsman part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Nimzo part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Baramos part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Leonyx part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Conklave X Lv.50",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Treeface part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Skeleton XY",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dorsalfiend part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Drakulard part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Chimaera XY",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goodybag XY part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Leonyx part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Conklave XY",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Gemslime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dierantula part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Wildcard part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Sagittar part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Demonrider part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Fallenpriest part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goodybag part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Metal King Slime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Zoma part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "metal dragon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Metal King Slime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Orochi part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Psaro part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Wailin'weed part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dullahan part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Chimaera X part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Jargon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Teeny Sanguini XY part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Green Dragon XY",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Green Dragon X Lv.50",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Metal kaiser slime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Canzar part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Chimaera XY part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Darkoniumslime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Brownie part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Wildcard part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goldgolem part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Panpiper part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Trode part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Cannibox part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Psaro part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "DonMole part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Nardragon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Jamirus part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Hunter Mech part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Moosifer part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Belial part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Wightking part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Riptide part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Conkettes part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Garuda part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Slime XY part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Zenithdragon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Wightking part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goodybag XY",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Beetlebully part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Green Dragon XY part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dragurn part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Diemon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Green Dragon X part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Shogum part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Shogum part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Slime XY",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dancing Flame part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Phantomswordsman part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Khalamari part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mumboh-jumboe part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Conklave XY part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Magmalice part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Canzar part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Hadescondor part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dragonlord part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Drakeslime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Chimaera XY part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Frostburn part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mum part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Gargoyle part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "mechan-o-wyrm part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Zenithdragon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Hunter Mech part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Cureslime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mum part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Green Dragon XY part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Firnfiend part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Trapbox part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Greatsabrecat part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Firnfiend part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "tortured soul part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Slime X Lv.50",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Liquid Metal Slime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Nature Family",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dragovianlord part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Murdaw part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "mechan-o-wyrm part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Snapdragon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Greatsabrecat part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Orgodemir part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Skeleton X Lv.50",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goodybag part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Overkilling machine part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Malroth part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Black Dragon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Nokturnus part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Undead Family",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Slime X",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Khalamari part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Seadragon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Skelegon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Jamirus part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Frou-frou part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Thornella part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Skeleton XY part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Beetlebully part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dragon Family",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Hargon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Estark part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Trapbox part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Teeny Sanguini X Lv.50",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Trauminator part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Thornella part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Hadescondor part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Teeny Sanguini X part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Nardragon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "atlas part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "King cure slime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "tortured soul part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Greygnarl part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Chimaera Lv.20",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Greatgodbird part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dessertdemon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Greatargonlizard part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "DrSnapped part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Estark part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Garuda part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Trode part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Lethalarmour part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Conklave X part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Cureslime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dullahan part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goodybag X part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Ace Of Spades",
+    "type": "incarnus",
+    "rank": "X",
+    "tags": [
+      "special",
+      "synth"
+    ]
+  },
+  {
+    "name": "Grimrider part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Archdemon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Frou-fry part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Liquid Metal Slime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mimic part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Kingslime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Drakulard part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Teeny Sanguini Lv.20",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Frostburn part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goldgolem part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Borealserpent part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Scorpion part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Scorpion part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Orochi part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Cannibox part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Drakeslime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Killingmachine part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "RigorMortex part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mohawker part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Roseguardin part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Conklave Lv.20",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mumboh-jumboe part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Borealserpent part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Boe part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "atlas part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Pazuzu part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dierantula part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Gemslime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Overkilling machine part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Teeny Sanguini XY part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Snapdragon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dragurn part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Green Dragon X",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Boss Troll part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dracolord part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goodybag Lv.20",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Orgodemir part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Malroth part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dualduellers part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Sagittar part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Scissorbeatle part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Chimaera X part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Jargon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mohawker part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Bonebaron part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Metal kaiser slime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Treeface part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Green Dragon X part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dualduellers part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Lethalarmour part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Leopold part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Exorsus part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Skeleton XY part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Teeny Sanguini XY",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Conklave XY part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Chimaera X",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Aquarion part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Skeleton X",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "DrSnapped part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Brownie part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Magmalice part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Seadragon part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goodybag XY part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Conkettes part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Skelegon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mortella part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Kingslime part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Gracos part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Beshemoth Slime part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Beast Family",
+    "type": "material",
+    "rank": "A",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Frou-frou part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Mortamor part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Scissorbeatle part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Trauminator part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Panpiper part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Greatgodbird part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Nokturnus part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Slime X part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Demonrider part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Dragonlord part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Diemon part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Goodybag X Lv.50",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Rhapthorne 2 part 2",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Nightclubber part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
+  },
+  {
+    "name": "Greygnarl part 1",
+    "type": "na",
+    "rank": "NA",
+    "tags": [
+      "synth"
+    ]
   }
 ] as Monster[]
