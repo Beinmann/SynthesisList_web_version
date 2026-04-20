@@ -23,6 +23,23 @@ const MAX_DEPTH = 4
 const NODE_W = 180
 const NODE_H = 130
 
+// Unbounded leaf count — monsters with no recipes are leaves.
+// Uses an ancestors set for cycle detection and a persistent memo.
+const _leafMemo = new Map<string, number>()
+function fullLeafCount(name: string, ancestors: Set<string>): number {
+  const key = name.toLowerCase()
+  if (ancestors.has(key)) return 0
+  if (_leafMemo.has(key)) return _leafMemo.get(key)!
+  const recipes = recipesByResult.get(key) ?? []
+  if (recipes.length === 0) { _leafMemo.set(key, 1); return 1 }
+  ancestors.add(key)
+  const r = recipes[0]
+  const n = fullLeafCount(r.parent1, ancestors) + fullLeafCount(r.parent2, ancestors)
+  ancestors.delete(key)
+  _leafMemo.set(key, n)
+  return n
+}
+
 function buildGraph(
   rootName: string,
   recipeIndices: Map<string, number>,
@@ -57,7 +74,7 @@ function buildGraph(
           recipeCount: recipes.length,
           depth,
           truncated: depth === MAX_DEPTH && recipes.length > 0,
-          leafCount: 0,
+          leafCount: fullLeafCount(name, new Set()),
           onMakeRoot,
           onCycleRecipe,
         },
@@ -78,28 +95,7 @@ function buildGraph(
   }
 
   visit(rootName, 0, null, null)
-
-  // Compute visible leaf counts (source = result, target = ingredient)
-  const childrenOf = new Map<string, string[]>()
-  for (const e of edges) {
-    const list = childrenOf.get(e.source) ?? []
-    list.push(e.target)
-    childrenOf.set(e.source, list)
-  }
-  const leafCounts = new Map<string, number>()
-  function countLeaves(id: string): number {
-    if (leafCounts.has(id)) return leafCounts.get(id)!
-    const children = childrenOf.get(id) ?? []
-    const n = children.length === 0 ? 1 : children.reduce((s, c) => s + countLeaves(c), 0)
-    leafCounts.set(id, n)
-    return n
-  }
-  for (const node of nodes) countLeaves(node.id)
-
-  return {
-    nodes: nodes.map(n => ({ ...n, data: { ...n.data, leafCount: leafCounts.get(n.id) ?? 1 } })),
-    edges,
-  }
+  return { nodes, edges }
 }
 
 function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<MonsterNodeData>[] {

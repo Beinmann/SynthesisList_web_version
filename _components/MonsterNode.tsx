@@ -44,15 +44,23 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
   const borderCls = typeColors[data.type] ?? 'border-zinc-600'
 
   return (
-    <div
-      className={`rounded-lg border-2 ${borderCls} bg-zinc-900 px-3 py-2 text-sm shadow-md min-w-[130px]`}
-      style={data.truncated ? { borderTopStyle: 'dashed' } : undefined}
-    >
-      <Handle type="target" position={Position.Bottom} className="!bg-zinc-600" />
-
+    <div className={`relative rounded-lg border-2 ${borderCls} bg-zinc-900 px-3 py-2 text-sm shadow-md min-w-[130px]`}>
       {data.truncated && (
-        <div className="text-[9px] text-zinc-500 text-center -mt-1 mb-1 tracking-[0.25em] select-none">···</div>
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 2,
+            height: 52,
+            backgroundImage: 'repeating-linear-gradient(to top, #71717a 0, #71717a 5px, transparent 5px, transparent 11px)',
+            pointerEvents: 'none',
+          }}
+        />
       )}
+
+      <Handle type="target" position={Position.Bottom} className="!bg-zinc-600" />
 
       <div
         className="flex items-center gap-2 cursor-pointer hover:brightness-125 transition-all"
