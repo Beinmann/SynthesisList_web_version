@@ -83,19 +83,31 @@ const EDGE_TYPES = {
 type NavEntry = { parent: string; isParent1: boolean; recipeIdx: number }
 
 // Unbounded leaf count — monsters with no recipes are leaves.
+// Base monsters (catchable) are also treated as leaves unless they are the root.
 // Uses an ancestors set for cycle detection and a persistent memo.
 const _leafMemo = new Map<string, number>()
-function fullLeafCount(name: string, ancestors: Set<string>): number {
+function fullLeafCount(name: string, ancestors: Set<string>, isRoot: boolean = false): number {
   const key = name.toLowerCase()
   if (ancestors.has(key)) return 0
-  if (_leafMemo.has(key)) return _leafMemo.get(key)!
+  
+  const monster = monsterByName.get(key)
+  const isBase = (monster?.tags ?? ['base']).includes('base')
+  
+  if (isBase && !isRoot) return 1
+  if (!isRoot && _leafMemo.has(key)) return _leafMemo.get(key)!
+  
   const recipes = recipesByResult.get(key) ?? []
-  if (recipes.length === 0) { _leafMemo.set(key, 1); return 1 }
+  if (recipes.length === 0) {
+    if (!isRoot) _leafMemo.set(key, 1)
+    return 1
+  }
+  
   ancestors.add(key)
   const r = recipes[0]
-  const n = fullLeafCount(r.parent1, ancestors) + fullLeafCount(r.parent2, ancestors)
+  const n = fullLeafCount(r.parent1, ancestors, false) + fullLeafCount(r.parent2, ancestors, false)
   ancestors.delete(key)
-  _leafMemo.set(key, n)
+  
+  if (!isRoot) _leafMemo.set(key, n)
   return n
 }
 
@@ -122,6 +134,11 @@ function buildGraph(
       const recipes = recipesByResult.get(key) ?? []
       const recipeIndex = Math.min(recipeIndices.get(nodeId) ?? 0, Math.max(0, recipes.length - 1))
 
+      const tags = monster?.tags ?? ['base']
+      const isBase = tags.includes('base')
+      const isRoot = depth === 0
+      const stopAtBase = isBase && !isRoot
+
       nodes.push({
         id: nodeId,
         type: 'monster',
@@ -129,20 +146,20 @@ function buildGraph(
           name: monster?.name ?? name,
           rank: (monster?.rank ?? '?') as Rank,
           type: (monster?.type ?? 'material') as MonsterType,
-          tags: monster?.tags ?? ['base'],
+          tags,
           nodeId,
           recipeIndex,
           recipeCount: recipes.length,
           depth,
-          truncated: depth === maxDepth && recipes.length > 0,
-          leafCount: fullLeafCount(name, new Set()),
+          truncated: (depth === maxDepth || stopAtBase) && recipes.length > 0,
+          leafCount: fullLeafCount(name, new Set(), isRoot),
           onMakeRoot,
           onCycleRecipe,
         },
         position: { x: 0, y: 0 },
       })
 
-      if (depth < maxDepth && recipes.length > 0) {
+      if (depth < maxDepth && recipes.length > 0 && !stopAtBase) {
         const r = recipes[recipeIndex]
         visit(r.parent1, depth + 1, nodeId, `${nodeId}>p1`)
         visit(r.parent2, depth + 1, nodeId, `${nodeId}>p2`)
@@ -334,7 +351,7 @@ export default function SynthesisViewer() {
             recipeCount: 1,
             depth: 0,
             truncated: false,
-            leafCount: fullLeafCount(parent, new Set()),
+            leafCount: fullLeafCount(parent, new Set(), true),
             onMakeRoot: handleMakeRoot,
             onCycleRecipe: handleCycleRecipe,
           },
@@ -353,8 +370,8 @@ export default function SynthesisViewer() {
             recipeIndex: 0,
             recipeCount: 1,
             depth: 0,
-            truncated: siblingRecipes.length > 0,
-            leafCount: fullLeafCount(siblingName, new Set()),
+            truncated: (siblingRecipes.length > 0),
+            leafCount: fullLeafCount(siblingName, new Set(), false),
             onMakeRoot: handleMakeRoot,
             onCycleRecipe: handleCycleRecipe,
           },
