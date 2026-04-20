@@ -21,7 +21,7 @@ import type { Rank, MonsterType } from './_data'
 const NODE_TYPES = { monster: MonsterNode }
 const MAX_DEPTH = 4
 const NODE_W = 180
-const NODE_H = 110
+const NODE_H = 130
 
 function buildGraph(
   rootName: string,
@@ -55,6 +55,9 @@ function buildGraph(
           nodeId,
           recipeIndex,
           recipeCount: recipes.length,
+          depth,
+          truncated: depth === MAX_DEPTH && recipes.length > 0,
+          leafCount: 0,
           onMakeRoot,
           onCycleRecipe,
         },
@@ -75,7 +78,28 @@ function buildGraph(
   }
 
   visit(rootName, 0, null, null)
-  return { nodes, edges }
+
+  // Compute visible leaf counts (source = result, target = ingredient)
+  const childrenOf = new Map<string, string[]>()
+  for (const e of edges) {
+    const list = childrenOf.get(e.source) ?? []
+    list.push(e.target)
+    childrenOf.set(e.source, list)
+  }
+  const leafCounts = new Map<string, number>()
+  function countLeaves(id: string): number {
+    if (leafCounts.has(id)) return leafCounts.get(id)!
+    const children = childrenOf.get(id) ?? []
+    const n = children.length === 0 ? 1 : children.reduce((s, c) => s + countLeaves(c), 0)
+    leafCounts.set(id, n)
+    return n
+  }
+  for (const node of nodes) countLeaves(node.id)
+
+  return {
+    nodes: nodes.map(n => ({ ...n, data: { ...n.data, leafCount: leafCounts.get(n.id) ?? 1 } })),
+    edges,
+  }
 }
 
 function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<MonsterNodeData>[] {

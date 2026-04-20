@@ -32,6 +32,9 @@ export interface MonsterNodeData extends Record<string, unknown> {
   nodeId: string
   recipeIndex: number
   recipeCount: number
+  depth: number
+  leafCount: number
+  truncated: boolean
   onMakeRoot: (name: string) => void
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void
 }
@@ -41,8 +44,15 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
   const borderCls = typeColors[data.type] ?? 'border-zinc-600'
 
   return (
-    <div className={`rounded-lg border-2 ${borderCls} bg-zinc-900 px-3 py-2 text-sm shadow-md min-w-[130px]`}>
+    <div
+      className={`rounded-lg border-2 ${borderCls} bg-zinc-900 px-3 py-2 text-sm shadow-md min-w-[130px]`}
+      style={data.truncated ? { borderTopStyle: 'dashed' } : undefined}
+    >
       <Handle type="target" position={Position.Bottom} className="!bg-zinc-600" />
+
+      {data.truncated && (
+        <div className="text-[9px] text-zinc-500 text-center -mt-1 mb-1 tracking-[0.25em] select-none">···</div>
+      )}
 
       <div
         className="flex items-center gap-2 cursor-pointer hover:brightness-125 transition-all"
@@ -70,6 +80,12 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
             >›</button>
           </div>
         )}
+      </div>
+
+      <div className="mt-1 flex gap-1.5 text-[9px] text-zinc-600 select-none">
+        <span>d{data.depth}</span>
+        <span>·</span>
+        <span>{data.leafCount} {data.leafCount === 1 ? 'leaf' : 'leaves'}</span>
       </div>
 
       <Handle type="source" position={Position.Top} className="!bg-zinc-600" />
