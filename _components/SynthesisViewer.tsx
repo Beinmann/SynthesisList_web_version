@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ReactFlow,
   Background,
@@ -9,6 +9,7 @@ import {
   useEdgesState,
   type Node,
   type Edge,
+
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -122,12 +123,18 @@ function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<Monste
   }))
 }
 
+const VIEW_PADDING = 24
+
 export default function SynthesisViewer() {
   const [root, setRoot] = useState<string | null>(null)
   const [recipeIndices, setRecipeIndices] = useState<Map<string, number>>(new Map())
   const [navHistory, setNavHistory] = useState<string[]>([])
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<MonsterNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rfInstance = useRef<any>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const pendingViewport = useRef<{ x: number; y: number; zoom: number } | null>(null)
 
   const handleMakeRoot = useCallback((name: string) => {
     setRoot(name)
@@ -187,8 +194,27 @@ export default function SynthesisViewer() {
   useEffect(() => {
     if (!root) return
     const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, handleMakeRoot, handleCycleRecipe)
-    setNodes(layoutNodes(raw, raw2))
+    const laid = layoutNodes(raw, raw2)
+    setNodes(laid)
     setEdges(raw2)
+
+    const container = containerRef.current
+    if (!container) return
+    const rootNode = laid.find(n => n.id === root.toLowerCase())
+    if (!rootNode) return
+    const { width, height } = container.getBoundingClientRect()
+    const rf = rfInstance.current
+    const zoom = rf ? (rf.getViewport().zoom || 1) : 1
+    const vp = {
+      x: width / 2 - (rootNode.position.x + NODE_W / 2) * zoom,
+      y: height - NODE_H * zoom - VIEW_PADDING,
+      zoom,
+    }
+    if (rf) {
+      rf.setViewport(vp, { duration: 300 })
+    } else {
+      pendingViewport.current = vp
+    }
   }, [root, recipeIndices, handleMakeRoot, handleCycleRecipe, setNodes, setEdges])
 
   return (
@@ -206,7 +232,7 @@ export default function SynthesisViewer() {
         )}
       </div>
 
-      <div className="rounded-xl border border-zinc-800 overflow-hidden" style={{ height: 560 }}>
+      <div ref={containerRef} className="rounded-xl border border-zinc-800 overflow-hidden" style={{ height: 560 }}>
         {root ? (
           <ReactFlow
             nodes={nodes}
@@ -214,7 +240,13 @@ export default function SynthesisViewer() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             nodeTypes={NODE_TYPES}
-            fitView
+            onInit={inst => {
+              rfInstance.current = inst
+              if (pendingViewport.current) {
+                inst.setViewport(pendingViewport.current)
+                pendingViewport.current = null
+              }
+            }}
             colorMode="dark"
           >
             <Background color="#27272a" gap={24} />
