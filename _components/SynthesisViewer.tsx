@@ -19,7 +19,6 @@ import { monsterByName, recipesByResult } from './_data'
 import type { Rank, MonsterType } from './_data'
 
 const NODE_TYPES = { monster: MonsterNode }
-const MAX_DEPTH = 4
 const NODE_W = 180
 const NODE_H = 130
 
@@ -43,6 +42,7 @@ function fullLeafCount(name: string, ancestors: Set<string>): number {
 function buildGraph(
   rootName: string,
   recipeIndices: Map<string, number>,
+  maxDepth: number,
   onMakeRoot: (name: string) => void,
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void,
 ) {
@@ -52,7 +52,7 @@ function buildGraph(
   const seen = new Set<string>()
 
   function visit(name: string, depth: number, resultId: string | null, edgeLabel: string | null) {
-    if (depth > MAX_DEPTH) return
+    if (depth > maxDepth) return
     const key = name.toLowerCase()
     const nodeId = edgeLabel ? `${edgeLabel}:${key}` : key
 
@@ -73,7 +73,7 @@ function buildGraph(
           recipeIndex,
           recipeCount: recipes.length,
           depth,
-          truncated: depth === MAX_DEPTH && recipes.length > 0,
+          truncated: depth === maxDepth && recipes.length > 0,
           leafCount: fullLeafCount(name, new Set()),
           onMakeRoot,
           onCycleRecipe,
@@ -81,7 +81,7 @@ function buildGraph(
         position: { x: 0, y: 0 },
       })
 
-      if (depth < MAX_DEPTH && recipes.length > 0) {
+      if (depth < maxDepth && recipes.length > 0) {
         const r = recipes[recipeIndex]
         visit(r.parent1, depth + 1, nodeId, `${nodeId}>p1`)
         visit(r.parent2, depth + 1, nodeId, `${nodeId}>p2`)
@@ -147,6 +147,7 @@ const VIEW_PADDING = 24
 
 export default function SynthesisViewer() {
   const [root, setRoot] = useState<string | null>(null)
+  const [maxDepth, setMaxDepth] = useState(3)
   const [recipeIndices, setRecipeIndices] = useState<Map<string, number>>(new Map())
   const [navHistory, setNavHistory] = useState<string[]>([])
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<MonsterNodeData>>([])
@@ -213,7 +214,7 @@ export default function SynthesisViewer() {
 
   useEffect(() => {
     if (!root) return
-    const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, handleMakeRoot, handleCycleRecipe)
+    const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, maxDepth, handleMakeRoot, handleCycleRecipe)
     const laid = layoutNodes(raw, raw2)
     setNodes(laid)
     setEdges(raw2)
@@ -235,22 +236,34 @@ export default function SynthesisViewer() {
     } else {
       pendingViewport.current = vp
     }
-  }, [root, recipeIndices, handleMakeRoot, handleCycleRecipe, setNodes, setEdges])
+  }, [root, recipeIndices, maxDepth, handleMakeRoot, handleCycleRecipe, setNodes, setEdges])
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3 flex-wrap">
         <MonsterSearch onSelect={handleSelect} />
-        {root && (
-          <span className="text-sm text-zinc-500">
-            <span className="text-zinc-300 font-medium">{root}</span>
-            {navHistory.length > 0 && (
-              <> — <button onClick={navigateBack} className="underline hover:text-zinc-300">↓ back to {navHistory.at(-1)}</button></>
-            )}
-            {navHistory.length === 0 && <> — click a node or use ← → ↓ to navigate</>}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 ml-auto">
+          <span className="text-xs text-zinc-500">Depth</span>
+          <button
+            onClick={() => setMaxDepth(d => Math.max(1, d - 1))}
+            className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-sm leading-none"
+          >−</button>
+          <span className="text-sm text-zinc-300 w-4 text-center">{maxDepth}</span>
+          <button
+            onClick={() => setMaxDepth(d => Math.min(8, d + 1))}
+            className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-sm leading-none"
+          >+</button>
+        </div>
       </div>
+      {root && (
+        <span className="text-sm text-zinc-500 -mt-2">
+          <span className="text-zinc-300 font-medium">{root}</span>
+          {navHistory.length > 0 && (
+            <> — <button onClick={navigateBack} className="underline hover:text-zinc-300">↓ back to {navHistory.at(-1)}</button></>
+          )}
+          {navHistory.length === 0 && <> — click a node or use ← → ↓ to navigate</>}
+        </span>
+      )}
 
       <div ref={containerRef} className="rounded-xl border border-zinc-800 overflow-hidden" style={{ height: 560 }}>
         {root ? (
@@ -280,7 +293,7 @@ export default function SynthesisViewer() {
       </div>
 
       <p className="text-xs text-zinc-600">
-        Tree shows up to {MAX_DEPTH} levels of ingredients. Use ‹ › on a node to cycle recipes. Arrow keys: ← → navigate into ingredients, ↓ go back.
+        Use ‹ › on a node to cycle recipes. Arrow keys: ← → navigate into ingredients, ↓ go back.
       </p>
     </div>
   )
