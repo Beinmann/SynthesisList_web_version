@@ -2,6 +2,8 @@
 
 import { useState, useRef } from 'react'
 import { monsters } from './_data'
+import { MonsterTypeIcon } from './MonsterTypeIcon'
+import { MonsterTagIcon } from './MonsterTagIcon'
 
 interface Props {
   onSelect: (name: string) => void
@@ -46,7 +48,18 @@ export default function MonsterSearch({ onSelect }: Props) {
             >
               <span className="text-zinc-500 text-[10px] w-4 font-black uppercase tracking-tighter">{m.rank}</span>
               <span className="text-zinc-100 font-medium">{m.name}</span>
-              <span className="ml-auto text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{m.type}</span>
+              <div className="ml-auto flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <MonsterTypeIcon type={m.type} className="w-3 h-3" />
+                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{m.type}</span>
+                </div>
+                {m.tags.map(tag => (
+                  <div key={tag} className="flex items-center gap-1">
+                    <MonsterTagIcon tag={tag} className="w-3 h-3" />
+                    <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">{tag}</span>
+                  </div>
+                ))}
+              </div>
             </li>
           ))}
         </ul>

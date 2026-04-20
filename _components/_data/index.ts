@@ -1,7 +1,7 @@
 import { monsters } from './monsters'
 import { recipes } from './recipes'
 
-export type { Monster, Rank, MonsterType } from './monsters'
+export type { Monster, Rank, MonsterType, MonsterTag } from './monsters'
 export type { Recipe } from './recipes'
 export { monsters, recipes }
 

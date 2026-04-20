@@ -21,7 +21,7 @@ import '@xyflow/react/dist/style.css'
 import MonsterNode, { type MonsterNodeData } from './MonsterNode'
 import MonsterSearch from './MonsterSearch'
 import { monsterByName, recipesByResult } from './_data'
-import type { Rank, MonsterType } from './_data'
+import type { Rank, MonsterType, MonsterTag } from './_data'
 
 const NODE_W = 200
 const NODE_H = 160
@@ -129,6 +129,7 @@ function buildGraph(
           name: monster?.name ?? name,
           rank: (monster?.rank ?? '?') as Rank,
           type: (monster?.type ?? 'material') as MonsterType,
+          tags: monster?.tags ?? ['base'],
           nodeId,
           recipeIndex,
           recipeCount: recipes.length,
@@ -327,6 +328,7 @@ export default function SynthesisViewer() {
             name: parentMonster?.name ?? parent,
             rank: (parentMonster?.rank ?? '?') as Rank,
             type: (parentMonster?.type ?? 'material') as MonsterType,
+            tags: parentMonster?.tags ?? ['base'],
             nodeId: parentNodeId,
             recipeIndex: safeIdx,
             recipeCount: 1,
@@ -346,6 +348,7 @@ export default function SynthesisViewer() {
             name: siblingMonster?.name ?? siblingName,
             rank: (siblingMonster?.rank ?? '?') as Rank,
             type: (siblingMonster?.type ?? 'material') as MonsterType,
+            tags: siblingMonster?.tags ?? ['base'],
             nodeId: siblingNodeId,
             recipeIndex: 0,
             recipeCount: 1,
