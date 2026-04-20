@@ -84,9 +84,14 @@ type NavEntry = { parent: string; isParent1: boolean; recipeIdx: number }
 
 // Unbounded leaf count — monsters with no recipes are leaves.
 // Base monsters (catchable) are also treated as leaves unless they are the root.
-// Uses an ancestors set for cycle detection and a persistent memo.
-const _leafMemo = new Map<string, number>()
-function fullLeafCount(name: string, ancestors: Set<string>, isRoot: boolean = false): number {
+// Uses an ancestors set for cycle detection and a local memo.
+function fullLeafCount(
+  name: string, 
+  ancestors: Set<string>, 
+  recipeIndices: Record<string, number>,
+  memo: Map<string, number>,
+  isRoot: boolean = false
+): number {
   const key = name.toLowerCase()
   if (ancestors.has(key)) return 0
   
@@ -94,30 +99,33 @@ function fullLeafCount(name: string, ancestors: Set<string>, isRoot: boolean = f
   const isBase = (monster?.tags ?? ['base']).includes('base')
   
   if (isBase && !isRoot) return 1
-  if (!isRoot && _leafMemo.has(key)) return _leafMemo.get(key)!
+  if (!isRoot && memo.has(key)) return memo.get(key)!
   
   const recipes = recipesByResult.get(key) ?? []
   if (recipes.length === 0) {
-    if (!isRoot) _leafMemo.set(key, 1)
+    if (!isRoot) memo.set(key, 1)
     return 1
   }
   
   ancestors.add(key)
-  const r = recipes[0]
-  const n = fullLeafCount(r.parent1, ancestors, false) + fullLeafCount(r.parent2, ancestors, false)
+  const idx = Math.min(recipeIndices[key] ?? 0, Math.max(0, recipes.length - 1))
+  const r = recipes[idx]
+  const n = fullLeafCount(r.parent1, ancestors, recipeIndices, memo, false) + 
+            fullLeafCount(r.parent2, ancestors, recipeIndices, memo, false)
   ancestors.delete(key)
   
-  if (!isRoot) _leafMemo.set(key, n)
+  if (!isRoot) memo.set(key, n)
   return n
 }
 
 function buildGraph(
   rootName: string,
-  recipeIndices: Map<string, number>,
+  recipeIndices: Record<string, number>,
   maxDepth: number,
   onMakeRoot: (name: string) => void,
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void,
 ) {
+  const leafMemo = new Map<string, number>()
   const nodes: Node<MonsterNodeData>[] = []
   // source = result monster, target = ingredient — lines flow upward from result (bottom) to ingredients (top)
   const edges: Edge[] = []
@@ -132,7 +140,7 @@ function buildGraph(
       seen.add(nodeId)
       const monster = monsterByName.get(key)
       const recipes = recipesByResult.get(key) ?? []
-      const recipeIndex = Math.min(recipeIndices.get(nodeId) ?? 0, Math.max(0, recipes.length - 1))
+      const recipeIndex = Math.min(recipeIndices[key] ?? 0, Math.max(0, recipes.length - 1))
 
       const tags = monster?.tags ?? ['base']
       const isBase = tags.includes('base')
@@ -152,7 +160,7 @@ function buildGraph(
           recipeCount: recipes.length,
           depth,
           truncated: (depth === maxDepth || stopAtBase) && recipes.length > 0,
-          leafCount: fullLeafCount(name, new Set(), isRoot),
+          leafCount: fullLeafCount(name, new Set(), recipeIndices, leafMemo, isRoot),
           onMakeRoot,
           onCycleRecipe,
         },
@@ -234,7 +242,17 @@ const CTX_GAP = NODE_W * 0.75
 export default function SynthesisViewer() {
   const [root, setRoot] = useState<string | null>(null)
   const [maxDepth, setMaxDepth] = useState(3)
-  const [recipeIndices, setRecipeIndices] = useState<Map<string, number>>(new Map())
+  const [recipeIndices, setRecipeIndices] = useState<Record<string, number>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('dqmj2_recipe_indices')
+      if (saved) {
+        try {
+          return JSON.parse(saved)
+        } catch (e) { console.error('Failed to load recipe indices', e) }
+      }
+    }
+    return {}
+  })
   const [navHistory, setNavHistory] = useState<NavEntry[]>([])
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<MonsterNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -246,24 +264,24 @@ export default function SynthesisViewer() {
 
   const handleMakeRoot = useCallback((name: string) => {
     setRoot(name)
-    setRecipeIndices(new Map())
     setNavHistory([])
   }, [])
 
   const handleSelect = useCallback((name: string) => {
     setRoot(name)
-    setRecipeIndices(new Map())
     setNavHistory([])
   }, [])
 
   const handleCycleRecipe = useCallback((nodeId: string, dir: 1 | -1) => {
     setRecipeIndices(prev => {
-      const next = new Map(prev)
       const key = nodeId.split(':').at(-1)!
       const recipes = recipesByResult.get(key) ?? []
       if (recipes.length < 2) return prev
-      const cur = next.get(nodeId) ?? 0
-      next.set(nodeId, (cur + dir + recipes.length) % recipes.length)
+      const cur = prev[key] ?? 0
+      const next = {
+        ...prev,
+        [key]: (cur + dir + recipes.length) % recipes.length
+      }
       return next
     })
   }, [])
@@ -272,13 +290,12 @@ export default function SynthesisViewer() {
     if (!root) return
     const key = root.toLowerCase()
     const recipes = recipesByResult.get(key) ?? []
-    const idx = recipeIndices.get(key) ?? 0
+    const idx = recipeIndices[key] ?? 0
     const recipe = recipes[idx]
     if (!recipe) return
     const target = dir === 'left' ? recipe.parent1 : recipe.parent2
     setNavHistory(h => [...h, { parent: root, isParent1: dir === 'left', recipeIdx: idx }])
     setRoot(target)
-    setRecipeIndices(new Map())
   }, [root, recipeIndices])
 
   const navigateBack = useCallback(() => {
@@ -286,8 +303,13 @@ export default function SynthesisViewer() {
     const prev = navHistory[navHistory.length - 1]
     setNavHistory(h => h.slice(0, -1))
     setRoot(prev.parent)
-    setRecipeIndices(new Map())
   }, [navHistory])
+
+  useEffect(() => {
+    if (Object.keys(recipeIndices).length > 0) {
+      sessionStorage.setItem('dqmj2_recipe_indices', JSON.stringify(recipeIndices))
+    }
+  }, [recipeIndices])
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -351,7 +373,7 @@ export default function SynthesisViewer() {
             recipeCount: 1,
             depth: 0,
             truncated: false,
-            leafCount: fullLeafCount(parent, new Set(), true),
+            leafCount: fullLeafCount(parent, new Set(), recipeIndices, new Map(), true),
             onMakeRoot: handleMakeRoot,
             onCycleRecipe: handleCycleRecipe,
           },
@@ -371,7 +393,7 @@ export default function SynthesisViewer() {
             recipeCount: 1,
             depth: 0,
             truncated: (siblingRecipes.length > 0),
-            leafCount: fullLeafCount(siblingName, new Set(), false),
+            leafCount: fullLeafCount(siblingName, new Set(), recipeIndices, new Map(), false),
             onMakeRoot: handleMakeRoot,
             onCycleRecipe: handleCycleRecipe,
           },
