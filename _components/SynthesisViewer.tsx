@@ -5,11 +5,12 @@ import {
   ReactFlow,
   Background,
   Controls,
+  Handle,
+  Position,
   useNodesState,
   useEdgesState,
   type Node,
   type Edge,
-
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -18,9 +19,19 @@ import MonsterSearch from './MonsterSearch'
 import { monsterByName, recipesByResult } from './_data'
 import type { Rank, MonsterType } from './_data'
 
-const NODE_TYPES = { monster: MonsterNode }
 const NODE_W = 180
 const NODE_H = 130
+
+const ContextSiblingNode = () => (
+  <div style={{ width: NODE_W, height: 1 }}>
+    <Handle type="target" position={Position.Bottom} style={{ visibility: 'hidden' }} />
+  </div>
+)
+
+const NODE_TYPES = {
+  monster: MonsterNode,
+  contextSibling: ContextSiblingNode,
+}
 
 type NavEntry = { parent: string; isParent1: boolean; recipeIdx: number }
 
@@ -159,6 +170,7 @@ export default function SynthesisViewer() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rfInstance = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const lastRoot = useRef<string | null>(null)
   const pendingViewport = useRef<{ x: number; y: number; zoom: number } | null>(null)
 
   const handleMakeRoot = useCallback((name: string) => {
@@ -276,7 +288,7 @@ export default function SynthesisViewer() {
 
         allNodes.push({
           id: siblingNodeId,
-          type: 'monster',
+          type: 'contextSibling',
           data: {
             name: siblingMonster?.name ?? siblingName,
             rank: (siblingMonster?.rank ?? '?') as Rank,
@@ -320,10 +332,27 @@ export default function SynthesisViewer() {
     if (!rootNode) return
     const { width, height } = container.getBoundingClientRect()
     const rf = rfInstance.current
-    const zoom = rf ? (rf.getViewport().zoom || 1) : 1
+
+    // Zoom out enough to show ~4 levels (Parent + Child + 2 levels of depth)
+    // Vertical span of 4 nodes: 4 * NODE_H
+    const levelsToShow = 4
+    const defaultZoom = Math.min(1, (height - VIEW_PADDING * 2) / (levelsToShow * NODE_H))
+
+    // Only reset zoom if root changed (initial load or navigation)
+    // Otherwise keep current zoom (e.g. recipe cycle)
+    const isNewRoot = lastRoot.current !== root
+    const currentZoom = rf ? (rf.getViewport().zoom || 1) : 1
+    const zoom = isNewRoot ? defaultZoom : currentZoom
+    lastRoot.current = root
+
+    // Parent context is at y=NODE_H, its bottom is at 2*NODE_H
+    // If no parent, root (y=0) is the bottom, so bottom is at NODE_H
+    const hasParent = navHistory.length > 0
+    const bottomY = hasParent ? 2 * NODE_H : NODE_H
+
     const vp = {
       x: width / 2 - (rootNode.position.x + NODE_W / 2) * zoom,
-      y: height - NODE_H * zoom - VIEW_PADDING,
+      y: height - bottomY * zoom - VIEW_PADDING,
       zoom,
     }
     if (rf) {
