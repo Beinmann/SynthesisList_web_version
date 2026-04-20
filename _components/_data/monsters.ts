@@ -7,7 +7,7 @@ export const monsters: Monster[] = [
     "name": "Slime",
     "type": "slime",
     "rank": "F",
-    "tags": ["base"]
+    "tags": ["base", "synth"]
   },
   {
     "name": "Fencing Fox",
@@ -19,13 +19,13 @@ export const monsters: Monster[] = [
     "name": "Leonyx",
     "type": "beast",
     "rank": "X",
-    "tags": ["special"]
+    "tags": ["special", "synth"]
   },
   {
     "name": "Malroth",
     "type": "demon",
     "rank": "S",
-    "tags": ["synth"]
+    "tags": ["synth", "special"]
   },
   {
     "name": "Demon at arms",
@@ -37,7 +37,7 @@ export const monsters: Monster[] = [
     "name": "Great Dragon",
     "type": "dragon",
     "rank": "A",
-    "tags": ["synth"]
+    "tags": ["synth", "base"]
   },
   {
     "name": "Ruin",

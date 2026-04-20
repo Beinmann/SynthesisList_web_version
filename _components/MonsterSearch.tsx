@@ -47,8 +47,8 @@ export default function MonsterSearch({ onSelect }: Props) {
               className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-white/5 cursor-pointer transition-colors border-b border-white/5 last:border-none"
             >
               <span className="text-zinc-500 text-[10px] w-4 font-black uppercase tracking-tighter">{m.rank}</span>
-              <span className="text-zinc-100 font-medium">{m.name}</span>
-              <div className="ml-auto flex items-center gap-3">
+              <span className="text-zinc-100 font-medium flex-1 truncate">{m.name}</span>
+              <div className="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-1 max-w-[55%]">
                 <div className="flex items-center gap-1.5">
                   <MonsterTypeIcon type={m.type} className="w-3 h-3" />
                   <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{m.type}</span>

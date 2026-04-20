@@ -79,8 +79,8 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
       </div>
 
       {/* Bottom Bar: Type & Recipe Cycling */}
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+      <div className="mt-3 flex items-start justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1.5 bg-zinc-800/50 px-2 py-1 rounded-lg border border-white/5">
             <MonsterTypeIcon type={data.type} className="w-3 h-3" />
             <span className="text-[10px] font-bold text-zinc-400 capitalize whitespace-nowrap">
