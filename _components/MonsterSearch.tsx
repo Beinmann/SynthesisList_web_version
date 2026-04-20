@@ -24,7 +24,8 @@ export default function MonsterSearch({ onSelect }: Props) {
   }
 
   return (
-    <div className="relative w-72">
+    <div className="relative w-72 group">
+      <div className="absolute inset-0 bg-white/5 rounded-xl blur-xl group-focus-within:bg-white/10 transition-all opacity-0 group-focus-within:opacity-100" />
       <input
         ref={inputRef}
         type="text"
@@ -33,19 +34,19 @@ export default function MonsterSearch({ onSelect }: Props) {
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="Search monster…"
-        className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+        className="relative w-full rounded-xl border border-white/10 bg-zinc-900/90 backdrop-blur-xl px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 shadow-2xl focus:outline-none focus:border-white/30 transition-all"
       />
       {open && results.length > 0 && (
-        <ul className="absolute z-50 mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl overflow-hidden">
+        <ul className="absolute z-50 mt-2 w-full rounded-xl border border-white/10 bg-zinc-900/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {results.map(m => (
             <li
               key={m.name}
               onMouseDown={() => select(m.name)}
-              className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-zinc-800 cursor-pointer"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-white/5 cursor-pointer transition-colors border-b border-white/5 last:border-none"
             >
-              <span className="text-zinc-400 text-xs w-4 font-bold">{m.rank}</span>
-              <span className="text-zinc-100">{m.name}</span>
-              <span className="ml-auto text-[10px] text-zinc-500 capitalize">{m.type}</span>
+              <span className="text-zinc-500 text-[10px] w-4 font-black uppercase tracking-tighter">{m.rank}</span>
+              <span className="text-zinc-100 font-medium">{m.name}</span>
+              <span className="ml-auto text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{m.type}</span>
             </li>
           ))}
         </ul>

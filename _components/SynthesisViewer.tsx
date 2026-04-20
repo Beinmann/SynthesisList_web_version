@@ -9,8 +9,12 @@ import {
   Position,
   useNodesState,
   useEdgesState,
+  BaseEdge,
+  getBezierPath,
+  BackgroundVariant,
   type Node,
   type Edge,
+  type EdgeProps,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -19,8 +23,47 @@ import MonsterSearch from './MonsterSearch'
 import { monsterByName, recipesByResult } from './_data'
 import type { Rank, MonsterType } from './_data'
 
-const NODE_W = 180
-const NODE_H = 130
+const NODE_W = 200
+const NODE_H = 160
+
+const FlowingEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  markerEnd,
+}: EdgeProps) => {
+  const [edgePath] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  })
+
+  const isDashed = !!style.strokeDasharray
+
+  return (
+    <>
+      <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={{ ...style, strokeWidth: 2, stroke: '#27272a' }} />
+      {!isDashed && (
+        <path
+          d={edgePath}
+          fill="none"
+          stroke="url(#edge-gradient)"
+          strokeWidth={2}
+          strokeDasharray="10, 20"
+          className="animate-flow"
+        />
+      )}
+    </>
+  )
+}
 
 const ContextSiblingNode = () => (
   <div style={{ width: NODE_W, height: 1 }}>
@@ -31,6 +74,10 @@ const ContextSiblingNode = () => (
 const NODE_TYPES = {
   monster: MonsterNode,
   contextSibling: ContextSiblingNode,
+}
+
+const EDGE_TYPES = {
+  flowing: FlowingEdge,
 }
 
 type NavEntry = { parent: string; isParent1: boolean; recipeIdx: number }
@@ -103,7 +150,13 @@ function buildGraph(
 
     // Edge goes from result (below) up to ingredient (above)
     if (resultId && edgeLabel) {
-      edges.push({ id: edgeLabel, source: resultId, target: nodeId, style: { stroke: '#52525b' } })
+      edges.push({
+        id: edgeLabel,
+        source: resultId,
+        target: nodeId,
+        type: 'flowing',
+        style: { stroke: '#3f3f46' }
+      })
     }
   }
 
@@ -310,7 +363,8 @@ export default function SynthesisViewer() {
           id: '__ctx_edge_root__',
           source: parentNodeId,
           target: root.toLowerCase(),
-          style: { stroke: '#52525b' },
+          type: 'flowing',
+          style: { stroke: '#3f3f46' },
         })
 
         // Dashed edge: parent → sibling (the other synthesis ingredient, not yet explored)
@@ -318,7 +372,8 @@ export default function SynthesisViewer() {
           id: '__ctx_edge_sibling__',
           source: parentNodeId,
           target: siblingNodeId,
-          style: { stroke: '#52525b', strokeDasharray: '6 4' },
+          type: 'flowing',
+          style: { stroke: '#3f3f46', strokeDasharray: '6 4' },
         })
       }
     }
@@ -363,62 +418,143 @@ export default function SynthesisViewer() {
   }, [root, recipeIndices, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, setNodes, setEdges])
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <MonsterSearch onSelect={handleSelect} />
-        <div className="flex items-center gap-1.5 ml-auto">
-          <span className="text-xs text-zinc-500">Depth</span>
-          <button
-            onClick={() => setMaxDepth(d => Math.max(1, d - 1))}
-            className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-sm leading-none"
-          >−</button>
-          <span className="text-sm text-zinc-300 w-4 text-center">{maxDepth}</span>
-          <button
-            onClick={() => setMaxDepth(d => Math.min(8, d + 1))}
-            className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-sm leading-none"
-          >+</button>
-        </div>
-      </div>
-      {root && (
-        <span className="text-sm text-zinc-500 -mt-2">
-          <span className="text-zinc-300 font-medium">{root}</span>
-          {navHistory.length > 0 && (
-            <> — <button onClick={navigateBack} className="underline hover:text-zinc-300">↓ back to {navHistory.at(-1)!.parent}</button></>
-          )}
-          {navHistory.length === 0 && <> — click a node or use ← → ↓ to navigate</>}
-        </span>
-      )}
+    <div className="flex flex-col gap-4 relative">
+      <style jsx global>{`
+        @keyframes flow {
+          from { stroke-dashoffset: 300; }
+          to { stroke-dashoffset: 0; }
+        }
+        .animate-flow {
+          animation: flow 10s linear infinite;
+        }
+        .react-flow__controls {
+          box-shadow: none !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          background: rgba(24, 24, 27, 0.8) !important;
+          backdrop-filter: blur(8px);
+          border-radius: 8px !important;
+          overflow: hidden;
+        }
+        .react-flow__controls-button {
+          border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+          fill: #a1a1aa !important;
+        }
+        .react-flow__controls-button:hover {
+          background: rgba(255,255,255,0.05) !important;
+        }
+      `}</style>
 
-      <div ref={containerRef} className="rounded-xl border border-zinc-800 overflow-hidden" style={{ height: 560 }}>
+      <div ref={containerRef} className="relative rounded-3xl border border-white/5 bg-zinc-950 overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]" style={{ height: 700 }}>
         {root ? (
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            nodeTypes={NODE_TYPES}
-            onInit={inst => {
-              rfInstance.current = inst
-              if (pendingViewport.current) {
-                inst.setViewport(pendingViewport.current)
-                pendingViewport.current = null
-              }
-            }}
-            colorMode="dark"
-          >
-            <Background color="#27272a" gap={24} />
-            <Controls />
-          </ReactFlow>
+          <>
+            <div className="absolute top-6 left-6 z-10 flex flex-col gap-4 pointer-events-none">
+              <div className="pointer-events-auto">
+                <MonsterSearch onSelect={handleSelect} />
+              </div>
+              
+              <div className="pointer-events-auto flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Viewer Controls</span>
+                <div className="flex items-center gap-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl p-2 px-3 self-start shadow-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-zinc-400">Depth</span>
+                    <div className="flex items-center bg-zinc-800 rounded-lg p-0.5">
+                      <button
+                        onClick={() => setMaxDepth(d => Math.max(1, d - 1))}
+                        className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-zinc-700 transition-colors text-zinc-300 text-xs"
+                      >−</button>
+                      <span className="text-xs font-bold text-zinc-100 w-6 text-center">{maxDepth}</span>
+                      <button
+                        onClick={() => setMaxDepth(d => Math.min(8, d + 1))}
+                        className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-zinc-700 transition-colors text-zinc-300 text-xs"
+                      >+</button>
+                    </div>
+                  </div>
+                  <div className="w-[1px] h-4 bg-white/10" />
+                  <div className="text-[10px] text-zinc-500 font-medium">
+                    {nodes.filter(n => n.type === 'monster').length} monsters
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {navHistory.length > 0 && (
+              <div className="absolute bottom-6 left-6 z-10 pointer-events-auto">
+                 <button 
+                  onClick={navigateBack} 
+                  className="group flex items-center gap-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-2 px-4 transition-all shadow-xl"
+                >
+                  <svg className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                  <div className="flex flex-col items-start">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter leading-none">Go Back</span>
+                    <span className="text-xs text-zinc-200 font-medium truncate max-w-[120px]">{navHistory.at(-1)!.parent}</span>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            <div className="absolute top-6 right-6 z-10 text-right pointer-events-none">
+              <div className="text-xs font-black text-white/20 uppercase tracking-[0.2em] mb-1">DQMJ2 Synthesis</div>
+              <div className="text-[10px] font-medium text-zinc-600">Experimental Protocol v2.0</div>
+            </div>
+
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              nodeTypes={NODE_TYPES}
+              edgeTypes={EDGE_TYPES}
+              onInit={inst => {
+                rfInstance.current = inst
+                if (pendingViewport.current) {
+                  inst.setViewport(pendingViewport.current)
+                  pendingViewport.current = null
+                }
+              }}
+              colorMode="dark"
+              proOptions={{ hideAttribution: true }}
+            >
+              <defs>
+                <linearGradient id="edge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3f3f46" stopOpacity="0" />
+                  <stop offset="50%" stopColor="#a1a1aa" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#3f3f46" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <Background 
+                variant={BackgroundVariant.Dots} 
+                gap={24} 
+                size={1} 
+                color="#27272a" 
+                style={{ backgroundColor: '#09090b' }} 
+              />
+              <Controls position="bottom-right" showInteractive={false} />
+            </ReactFlow>
+          </>
         ) : (
-          <div className="flex h-full items-center justify-center text-zinc-600 text-sm">
-            Search for a monster above to see its synthesis tree.
+          <div className="flex h-full flex-col items-center justify-center bg-[#09090b]">
+            <div className="w-72">
+              <MonsterSearch onSelect={handleSelect} />
+            </div>
+            <p className="mt-4 text-zinc-600 text-sm font-medium">
+              Search for a monster to begin the synthesis sequence
+            </p>
           </div>
         )}
       </div>
 
-      <p className="text-xs text-zinc-600">
-        Use ‹ › on a node to cycle recipes. Arrow keys: ← → navigate into ingredients, ↓ go back.
-      </p>
+      <div className="flex items-center justify-between px-2">
+        <p className="text-[10px] text-zinc-600 font-medium flex items-center gap-3">
+          <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">←</kbd> <kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">→</kbd> Navigate</span>
+          <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">↓</kbd> Back</span>
+          <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">‹</kbd> <kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">›</kbd> Cycle</span>
+        </p>
+        <p className="text-[10px] text-zinc-700 font-bold uppercase tracking-widest">
+          Synthesized by Junie
+        </p>
+      </div>
     </div>
   )
 }
