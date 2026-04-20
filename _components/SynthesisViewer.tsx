@@ -333,9 +333,9 @@ export default function SynthesisViewer() {
     const { width, height } = container.getBoundingClientRect()
     const rf = rfInstance.current
 
-    // Zoom out enough to show ~4 levels (Parent + Child + 2 levels of depth)
-    // Vertical span of 4 nodes: 4 * NODE_H
-    const levelsToShow = 4
+    // Zoom out enough to show ~5 levels (Parent + Child + 3 levels of depth)
+    // Vertical span of 5 nodes: 5 * NODE_H
+    const levelsToShow = 5
     const defaultZoom = Math.min(1, (height - VIEW_PADDING * 2) / (levelsToShow * NODE_H))
 
     // Only reset zoom if root changed (initial load or navigation)
