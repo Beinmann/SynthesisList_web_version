@@ -33,11 +33,6 @@ export const monsters: Monster[] = [
     "rank": "A"
   },
   {
-    "name": "Mumboh Jumboh",
-    "type": "material",
-    "rank": "S"
-  },
-  {
     "name": "Ruin",
     "type": "material",
     "rank": "S"
