@@ -22,6 +22,8 @@ const NODE_TYPES = { monster: MonsterNode }
 const NODE_W = 180
 const NODE_H = 130
 
+type NavEntry = { parent: string; isParent1: boolean; recipeIdx: number }
+
 // Unbounded leaf count — monsters with no recipes are leaves.
 // Uses an ancestors set for cycle detection and a persistent memo.
 const _leafMemo = new Map<string, number>()
@@ -144,12 +146,14 @@ function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<Monste
 }
 
 const VIEW_PADDING = 24
+// Gap between the main tree's x-extent and the context sibling node
+const CTX_GAP = NODE_W * 0.75
 
 export default function SynthesisViewer() {
   const [root, setRoot] = useState<string | null>(null)
   const [maxDepth, setMaxDepth] = useState(3)
   const [recipeIndices, setRecipeIndices] = useState<Map<string, number>>(new Map())
-  const [navHistory, setNavHistory] = useState<string[]>([])
+  const [navHistory, setNavHistory] = useState<NavEntry[]>([])
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<MonsterNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,7 +193,7 @@ export default function SynthesisViewer() {
     const recipe = recipes[idx]
     if (!recipe) return
     const target = dir === 'left' ? recipe.parent1 : recipe.parent2
-    setNavHistory(h => [...h, root])
+    setNavHistory(h => [...h, { parent: root, isParent1: dir === 'left', recipeIdx: idx }])
     setRoot(target)
     setRecipeIndices(new Map())
   }, [root, recipeIndices])
@@ -198,7 +202,7 @@ export default function SynthesisViewer() {
     if (navHistory.length === 0) return
     const prev = navHistory[navHistory.length - 1]
     setNavHistory(h => h.slice(0, -1))
-    setRoot(prev)
+    setRoot(prev.parent)
     setRecipeIndices(new Map())
   }, [navHistory])
 
@@ -216,8 +220,99 @@ export default function SynthesisViewer() {
     if (!root) return
     const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, maxDepth, handleMakeRoot, handleCycleRecipe)
     const laid = layoutNodes(raw, raw2)
-    setNodes(laid)
-    setEdges(raw2)
+    const allNodes: Node<MonsterNodeData>[] = [...laid]
+    const allEdges: Edge[] = [...raw2]
+
+    // Inject parent + sibling context nodes when we've navigated into a child
+    const parentEntry = navHistory.length > 0 ? navHistory[navHistory.length - 1] : null
+    if (parentEntry) {
+      const { parent, isParent1, recipeIdx } = parentEntry
+      const parentKey = parent.toLowerCase()
+      const parentRecipes = recipesByResult.get(parentKey) ?? []
+      const safeIdx = Math.min(recipeIdx, Math.max(0, parentRecipes.length - 1))
+      const parentRecipe = parentRecipes[safeIdx]
+      const parentMonster = monsterByName.get(parentKey)
+
+      const rootNode = laid.find(n => n.id === root.toLowerCase())
+      if (rootNode && parentRecipe) {
+        const rootX = rootNode.position.x
+        const treeXs = laid.map(n => n.position.x)
+        const treeMaxX = Math.max(...treeXs)
+        const treeMinX = Math.min(...treeXs)
+
+        const siblingName = isParent1 ? parentRecipe.parent2 : parentRecipe.parent1
+        const siblingKey = siblingName.toLowerCase()
+        const siblingMonster = monsterByName.get(siblingKey)
+        const siblingRecipes = recipesByResult.get(siblingKey) ?? []
+
+        // Sibling goes outside the tree extent; parent centers between root and sibling
+        const siblingX = isParent1
+          ? treeMaxX + CTX_GAP
+          : treeMinX - CTX_GAP
+        const parentX = (rootX + siblingX) / 2
+        const parentY = NODE_H  // one level below root (root is at y=0)
+
+        const parentNodeId = '__ctx_parent__'
+        const siblingNodeId = '__ctx_sibling__'
+
+        allNodes.push({
+          id: parentNodeId,
+          type: 'monster',
+          data: {
+            name: parentMonster?.name ?? parent,
+            rank: (parentMonster?.rank ?? '?') as Rank,
+            type: (parentMonster?.type ?? 'material') as MonsterType,
+            nodeId: parentNodeId,
+            recipeIndex: safeIdx,
+            recipeCount: 1,
+            depth: 0,
+            truncated: false,
+            leafCount: fullLeafCount(parent, new Set()),
+            onMakeRoot: handleMakeRoot,
+            onCycleRecipe: handleCycleRecipe,
+          },
+          position: { x: parentX, y: parentY },
+        })
+
+        allNodes.push({
+          id: siblingNodeId,
+          type: 'monster',
+          data: {
+            name: siblingMonster?.name ?? siblingName,
+            rank: (siblingMonster?.rank ?? '?') as Rank,
+            type: (siblingMonster?.type ?? 'material') as MonsterType,
+            nodeId: siblingNodeId,
+            recipeIndex: 0,
+            recipeCount: 1,
+            depth: 0,
+            truncated: siblingRecipes.length > 0,
+            leafCount: fullLeafCount(siblingName, new Set()),
+            onMakeRoot: handleMakeRoot,
+            onCycleRecipe: handleCycleRecipe,
+          },
+          position: { x: siblingX, y: 0 },
+        })
+
+        // Solid edge: parent → current root (the synthesis connection we came from)
+        allEdges.push({
+          id: '__ctx_edge_root__',
+          source: parentNodeId,
+          target: root.toLowerCase(),
+          style: { stroke: '#52525b' },
+        })
+
+        // Dashed edge: parent → sibling (the other synthesis ingredient, not yet explored)
+        allEdges.push({
+          id: '__ctx_edge_sibling__',
+          source: parentNodeId,
+          target: siblingNodeId,
+          style: { stroke: '#52525b', strokeDasharray: '6 4' },
+        })
+      }
+    }
+
+    setNodes(allNodes)
+    setEdges(allEdges)
 
     const container = containerRef.current
     if (!container) return
@@ -236,7 +331,7 @@ export default function SynthesisViewer() {
     } else {
       pendingViewport.current = vp
     }
-  }, [root, recipeIndices, maxDepth, handleMakeRoot, handleCycleRecipe, setNodes, setEdges])
+  }, [root, recipeIndices, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, setNodes, setEdges])
 
   return (
     <div className="flex flex-col gap-4">
@@ -259,7 +354,7 @@ export default function SynthesisViewer() {
         <span className="text-sm text-zinc-500 -mt-2">
           <span className="text-zinc-300 font-medium">{root}</span>
           {navHistory.length > 0 && (
-            <> — <button onClick={navigateBack} className="underline hover:text-zinc-300">↓ back to {navHistory.at(-1)}</button></>
+            <> — <button onClick={navigateBack} className="underline hover:text-zinc-300">↓ back to {navHistory.at(-1)!.parent}</button></>
           )}
           {navHistory.length === 0 && <> — click a node or use ← → ↓ to navigate</>}
         </span>
