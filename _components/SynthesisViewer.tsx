@@ -29,7 +29,7 @@ function buildGraph(
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void,
 ) {
   const nodes: Node<MonsterNodeData>[] = []
-  // source = result monster, target = ingredient — lines flow downward from result to ingredients
+  // source = result monster, target = ingredient — lines flow upward from result (bottom) to ingredients (top)
   const edges: Edge[] = []
   const seen = new Set<string>()
 
@@ -67,7 +67,7 @@ function buildGraph(
       }
     }
 
-    // Edge goes from result (above) down to ingredient (below)
+    // Edge goes from result (below) up to ingredient (above)
     if (resultId && edgeLabel) {
       edges.push({ id: edgeLabel, source: resultId, target: nodeId, style: { stroke: '#52525b' } })
     }
@@ -90,7 +90,7 @@ function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<Monste
 
   const roots = nodes.filter(n => !resultOf.has(n.id))
 
-  // BFS depth: root at 0, ingredients go deeper downward
+  // BFS depth: root at 0, ingredients go deeper upward (negative y)
   const depth = new Map<string, number>()
   const queue = roots.map(r => ({ id: r.id, d: 0 }))
   while (queue.length) {
@@ -100,7 +100,7 @@ function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<Monste
     for (const ing of ingredientsOf.get(id) ?? []) queue.push({ id: ing, d: d + 1 })
   }
 
-  // Post-order x assignment so each result centers over its ingredients
+  // Post-order x assignment so each result centers under its ingredients
   const x = new Map<string, number>()
   let cursor = 0
   function assignX(id: string) {
@@ -118,7 +118,7 @@ function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<Monste
 
   return nodes.map(n => ({
     ...n,
-    position: { x: x.get(n.id) ?? 0, y: (depth.get(n.id) ?? 0) * NODE_H },
+    position: { x: x.get(n.id) ?? 0, y: -(depth.get(n.id) ?? 0) * NODE_H },
   }))
 }
 

@@ -42,7 +42,7 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
 
   return (
     <div className={`rounded-lg border-2 ${borderCls} bg-zinc-900 px-3 py-2 text-sm shadow-md min-w-[130px]`}>
-      <Handle type="target" position={Position.Top} className="!bg-zinc-600" />
+      <Handle type="target" position={Position.Bottom} className="!bg-zinc-600" />
 
       <div
         className="flex items-center gap-2 cursor-pointer hover:brightness-125 transition-all"
@@ -72,7 +72,7 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
         )}
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="!bg-zinc-600" />
+      <Handle type="source" position={Position.Top} className="!bg-zinc-600" />
     </div>
   )
 }
