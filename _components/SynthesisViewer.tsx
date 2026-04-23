@@ -121,6 +121,7 @@ function fullLeafCount(
 function buildGraph(
   rootName: string,
   recipeIndices: Record<string, number>,
+  foldedRecipes: Record<string, boolean>,
   maxDepth: number,
   onMakeRoot: (name: string) => void,
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void,
@@ -146,6 +147,7 @@ function buildGraph(
       const isBase = tags.includes('base')
       const isRoot = depth === 0
       const stopAtBase = isBase && !isRoot
+      const isFolded = foldedRecipes[key] === true
 
       nodes.push({
         id: nodeId,
@@ -159,7 +161,7 @@ function buildGraph(
           recipeIndex,
           recipeCount: recipes.length,
           depth,
-          truncated: (depth === maxDepth || stopAtBase) && recipes.length > 0,
+          truncated: (depth === maxDepth || stopAtBase || isFolded) && recipes.length > 0,
           leafCount: fullLeafCount(name, new Set(), recipeIndices, leafMemo, isRoot),
           onMakeRoot,
           onCycleRecipe,
@@ -167,7 +169,7 @@ function buildGraph(
         position: { x: 0, y: 0 },
       })
 
-      if (depth < maxDepth && recipes.length > 0 && !stopAtBase) {
+      if (depth < maxDepth && recipes.length > 0 && !stopAtBase && !isFolded) {
         const r = recipes[recipeIndex]
         visit(r.parent1, depth + 1, nodeId, `${nodeId}>p1`)
         visit(r.parent2, depth + 1, nodeId, `${nodeId}>p2`)
@@ -253,6 +255,17 @@ export default function SynthesisViewer() {
     }
     return {}
   })
+  const [foldedRecipes, setFoldedRecipes] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('dqmj2_folded_recipes')
+      if (saved) {
+        try {
+          return JSON.parse(saved)
+        } catch (e) { console.error('Failed to load folded recipes', e) }
+      }
+    }
+    return {}
+  })
   const [navHistory, setNavHistory] = useState<NavEntry[]>([])
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<MonsterNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -305,6 +318,19 @@ export default function SynthesisViewer() {
     setRoot(prev.parent)
   }, [navHistory])
 
+  const toggleFoldRoot = useCallback(() => {
+    if (!root) return
+    const key = root.toLowerCase()
+    const recipes = recipesByResult.get(key) ?? []
+    if (recipes.length === 0) return
+    setFoldedRecipes(prev => {
+      const next = { ...prev }
+      if (next[key]) delete next[key]
+      else next[key] = true
+      return next
+    })
+  }, [root])
+
   useEffect(() => {
     if (Object.keys(recipeIndices).length > 0) {
       sessionStorage.setItem('dqmj2_recipe_indices', JSON.stringify(recipeIndices))
@@ -312,18 +338,27 @@ export default function SynthesisViewer() {
   }, [recipeIndices])
 
   useEffect(() => {
+    if (Object.keys(foldedRecipes).length > 0) {
+      sessionStorage.setItem('dqmj2_folded_recipes', JSON.stringify(foldedRecipes))
+    } else {
+      sessionStorage.removeItem('dqmj2_folded_recipes')
+    }
+  }, [foldedRecipes])
+
+  useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'ArrowLeft')  { e.preventDefault(); navigateToChild('left') }
       if (e.key === 'ArrowRight') { e.preventDefault(); navigateToChild('right') }
       if (e.key === 'ArrowDown')  { e.preventDefault(); navigateBack() }
+      if (e.key === 'ArrowUp')    { e.preventDefault(); toggleFoldRoot() }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [navigateToChild, navigateBack])
+  }, [navigateToChild, navigateBack, toggleFoldRoot])
 
   useEffect(() => {
     if (!root) return
-    const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, maxDepth, handleMakeRoot, handleCycleRecipe)
+    const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, foldedRecipes, maxDepth, handleMakeRoot, handleCycleRecipe)
     const laid = layoutNodes(raw, raw2)
     const allNodes: Node<MonsterNodeData>[] = [...laid]
     const allEdges: Edge[] = [...raw2]
@@ -457,7 +492,7 @@ export default function SynthesisViewer() {
     } else {
       pendingViewport.current = vp
     }
-  }, [root, recipeIndices, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, setNodes, setEdges])
+  }, [root, recipeIndices, foldedRecipes, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, setNodes, setEdges])
 
   return (
     <div className="flex flex-col gap-4 relative">
@@ -591,6 +626,7 @@ export default function SynthesisViewer() {
         <p className="text-[10px] text-zinc-600 font-medium flex items-center gap-3">
           <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">←</kbd> <kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">→</kbd> Navigate</span>
           <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">↓</kbd> Back</span>
+          <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">↑</kbd> Fold</span>
           <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">‹</kbd> <kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">›</kbd> Cycle</span>
         </p>
         <p className="text-[10px] text-zinc-700 font-bold uppercase tracking-widest">
