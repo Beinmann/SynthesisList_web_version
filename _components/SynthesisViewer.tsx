@@ -28,6 +28,19 @@ const VIEW_PADDING = 24
 // fade used for added/removed nodes.
 const PAN_MS = 350
 const FADE_MS = 350
+// Fixed 4-level tree (depths 0..3): 1 + 2 + 4 + 8 = 15 slots. Every node
+// reserves its canonical slot so the layout stays identical across
+// navigations — gaps appear where a subtree is shorter, rather than sibling
+// positions sliding horizontally to take up the slack.
+const MAX_DEPTH = 3
+
+// Canonical x for a node at (depth, slotK). Depth 0 centers on 0; at depth d
+// a node occupies 2^(MAX_DEPTH - d) leaf-slots of width NODE_W.
+function slotX(depth: number, slotK: number): number {
+  const leafSlotsPerNode = 1 << (MAX_DEPTH - depth)
+  const totalLeafSlots = 1 << MAX_DEPTH
+  return (slotK + 0.5) * leafSlotsPerNode * NODE_W - (totalLeafSlots * NODE_W) / 2
+}
 
 const FlowingEdge = ({
   id,
@@ -125,7 +138,6 @@ function buildGraph(
   rootName: string,
   recipeIndices: Record<string, number>,
   foldedRecipes: Record<string, boolean>,
-  maxDepth: number,
   onMakeRoot: (name: string) => void,
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void,
   onToggleFold: (name: string) => void,
@@ -136,8 +148,8 @@ function buildGraph(
   const edges: Edge[] = []
   const seen = new Set<string>()
 
-  function visit(name: string, depth: number, resultId: string | null, edgeLabel: string | null) {
-    if (depth > maxDepth) return
+  function visit(name: string, depth: number, slotK: number, resultId: string | null, edgeLabel: string | null) {
+    if (depth > MAX_DEPTH) return
     const key = name.toLowerCase()
     const nodeId = edgeLabel ? `${edgeLabel}:${key}` : key
 
@@ -168,20 +180,20 @@ function buildGraph(
           recipeIndex,
           recipeCount: recipes.length,
           depth,
-          truncated: (depth === maxDepth || stopAtBase || isFolded) && recipes.length > 0,
+          truncated: (depth === MAX_DEPTH || stopAtBase || isFolded) && recipes.length > 0,
           folded: isFolded,
           leafCount: fullLeafCount(name, new Set(), recipeIndices, leafMemo, isRoot),
           onMakeRoot,
           onCycleRecipe,
           onToggleFold,
         },
-        position: { x: 0, y: 0 },
+        position: { x: slotX(depth, slotK), y: -depth * NODE_H },
       })
 
-      if (depth < maxDepth && recipes.length > 0 && !stopAtBase && !isFolded) {
+      if (depth < MAX_DEPTH && recipes.length > 0 && !stopAtBase && !isFolded) {
         const r = recipes[recipeIndex]
-        visit(r.parent1, depth + 1, nodeId, `${nodeId}>p1`)
-        visit(r.parent2, depth + 1, nodeId, `${nodeId}>p2`)
+        visit(r.parent1, depth + 1, slotK * 2, nodeId, `${nodeId}>p1`)
+        visit(r.parent2, depth + 1, slotK * 2 + 1, nodeId, `${nodeId}>p2`)
       }
     }
 
@@ -197,53 +209,8 @@ function buildGraph(
     }
   }
 
-  visit(rootName, 0, null, null)
+  visit(rootName, 0, 0, null, null)
   return { nodes, edges }
-}
-
-function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<MonsterNodeData>[] {
-  // source = result, target = ingredient
-  const ingredientsOf = new Map<string, string[]>()
-  const resultOf = new Map<string, string>()
-  for (const e of edges) {
-    const list = ingredientsOf.get(e.source) ?? []
-    list.push(e.target)
-    ingredientsOf.set(e.source, list)
-    resultOf.set(e.target, e.source)
-  }
-
-  const roots = nodes.filter(n => !resultOf.has(n.id))
-
-  // BFS depth: root at 0, ingredients go deeper upward (negative y)
-  const depth = new Map<string, number>()
-  const queue = roots.map(r => ({ id: r.id, d: 0 }))
-  while (queue.length) {
-    const { id, d } = queue.shift()!
-    if (depth.has(id)) continue
-    depth.set(id, d)
-    for (const ing of ingredientsOf.get(id) ?? []) queue.push({ id: ing, d: d + 1 })
-  }
-
-  // Post-order x assignment so each result centers under its ingredients
-  const x = new Map<string, number>()
-  let cursor = 0
-  function assignX(id: string) {
-    const ings = ingredientsOf.get(id) ?? []
-    if (ings.length === 0) {
-      x.set(id, cursor)
-      cursor += NODE_W
-    } else {
-      for (const ing of ings) assignX(ing)
-      const xs = ings.map(i => x.get(i)!)
-      x.set(id, (Math.min(...xs) + Math.max(...xs)) / 2)
-    }
-  }
-  for (const r of roots) assignX(r.id)
-
-  return nodes.map(n => ({
-    ...n,
-    position: { x: x.get(n.id) ?? 0, y: -(depth.get(n.id) ?? 0) * NODE_H },
-  }))
 }
 
 // Append the context parent + sibling nodes and their edges. Pure: the resulting
@@ -271,21 +238,19 @@ function injectContext(
   if (!rootNode || !parentRecipe) return { nodes: [...laid], edges: [...edges] }
 
   const rootX = rootNode.position.x
-  const treeXs = laid.map(n => n.position.x)
-  const treeMaxX = Math.max(...treeXs)
-  const treeMinX = Math.min(...treeXs)
 
   const siblingName = isParent1 ? parentRecipe.parent2 : parentRecipe.parent1
   const siblingKey = siblingName.toLowerCase()
   const siblingMonster = monsterByName.get(siblingKey)
   const siblingRecipes = recipesByResult.get(siblingKey) ?? []
 
-  // Sibling sits one layout slot outside the tree's leaf extent — matches the
-  // spacing layoutNodes would produce if the parent were laid out as root with
-  // the sibling as an un-expanded leaf. Parent then centers between its two
-  // immediate children (root-subtree root and sibling), which is the same
-  // midpoint formula layoutNodes uses.
-  const siblingX = isParent1 ? treeMaxX + NODE_W : treeMinX - NODE_W
+  // Sibling sits one NODE_W outside the root subtree's reserved leaf extent.
+  // Using the canonical reservation (not whatever rendered) keeps the parent
+  // and sibling pinned to stable positions across navigations.
+  const canonicalHalfExtent = ((1 << MAX_DEPTH) - 1) * NODE_W / 2
+  const siblingX = isParent1
+    ? rootX + canonicalHalfExtent + NODE_W
+    : rootX - canonicalHalfExtent - NODE_W
   const parentX = (rootX + siblingX) / 2
   const parentY = rootNode.position.y + NODE_H
 
@@ -371,21 +336,18 @@ function buildFullGraph(args: {
   navHistory: NavEntry[]
   recipeIndices: Record<string, number>
   foldedRecipes: Record<string, boolean>
-  maxDepth: number
   handlers: Handlers
 }): { nodes: Node<MonsterNodeData>[]; edges: Edge[] } {
-  const { nodes: raw, edges } = buildGraph(
+  const { nodes, edges } = buildGraph(
     args.root,
     args.recipeIndices,
     args.foldedRecipes,
-    args.maxDepth,
     args.handlers.onMakeRoot,
     args.handlers.onCycleRecipe,
     args.handlers.onToggleFold,
   )
-  const laid = layoutNodes(raw, edges)
   return injectContext(
-    laid,
+    nodes,
     edges,
     args.root,
     args.navHistory,
@@ -407,7 +369,6 @@ function applyAlignment(nodes: Node<MonsterNodeData>[], alignTo: AlignTo): Node<
 
 export default function SynthesisViewer() {
   const [root, setRoot] = useState<string | null>(null)
-  const [maxDepth, setMaxDepth] = useState(3)
   const [recipeIndices, setRecipeIndices] = useState<Record<string, number>>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('dqmj2_recipe_indices')
@@ -461,13 +422,11 @@ export default function SynthesisViewer() {
   const navHistoryRef = useRef(navHistory)
   const recipeIndicesRef = useRef(recipeIndices)
   const foldedRecipesRef = useRef(foldedRecipes)
-  const maxDepthRef = useRef(maxDepth)
   useEffect(() => { nodesRef.current = nodes }, [nodes])
   useEffect(() => { rootRef.current = root }, [root])
   useEffect(() => { navHistoryRef.current = navHistory }, [navHistory])
   useEffect(() => { recipeIndicesRef.current = recipeIndices }, [recipeIndices])
   useEffect(() => { foldedRecipesRef.current = foldedRecipes }, [foldedRecipes])
-  useEffect(() => { maxDepthRef.current = maxDepth }, [maxDepth])
 
   const cancelPendingNav = useCallback(() => {
     if (panTimeoutRef.current !== null) {
@@ -546,22 +505,6 @@ export default function SynthesisViewer() {
     setFoldedRecipes(nextMap)
   }, [cancelPendingNav])
 
-  const changeMaxDepth = useCallback((delta: 1 | -1) => {
-    cancelPendingNav()
-    const rootKey = rootRef.current?.toLowerCase()
-    if (rootKey) {
-      const focal = nodesRef.current.find(n => n.id === rootKey && n.data.phase !== 'exiting')
-      if (focal) {
-        alignToRef.current = { nodeId: rootKey, worldPos: focal.position }
-      }
-    }
-    setMaxDepth(d => {
-      const next = Math.max(1, Math.min(8, d + delta))
-      maxDepthRef.current = next
-      return next
-    })
-  }, [cancelPendingNav])
-
   // The "effective" tree a nav handler reasons about: if a prior pending nav
   // is still panning, simulate its post-commit layout (deterministic via
   // buildFullGraph + applyAlignment). Otherwise use the currently rendered
@@ -579,7 +522,6 @@ export default function SynthesisViewer() {
         navHistory: p.navHistory,
         recipeIndices: recipeIndicesRef.current,
         foldedRecipes: foldedRecipesRef.current,
-        maxDepth: maxDepthRef.current,
         handlers,
       }).nodes
       return { nodes: applyAlignment(built, p.alignTo), root: p.root, navHistory: p.navHistory }
@@ -711,7 +653,7 @@ export default function SynthesisViewer() {
       onCycleRecipe: handleCycleRecipe,
       onToggleFold: handleToggleFold,
     }
-    const built = buildFullGraph({ root, navHistory, recipeIndices, foldedRecipes, maxDepth, handlers })
+    const built = buildFullGraph({ root, navHistory, recipeIndices, foldedRecipes, handlers })
 
     let aligned = built.nodes
     if (alignToRef.current) {
@@ -767,7 +709,7 @@ export default function SynthesisViewer() {
         pendingViewport.current = vp
       }
     }
-  }, [root, recipeIndices, foldedRecipes, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, handleToggleFold, setNodes, setEdges])
+  }, [root, recipeIndices, foldedRecipes, navHistory, handleMakeRoot, handleCycleRecipe, handleToggleFold, setNodes, setEdges])
 
   return (
     <div className="flex flex-col gap-4 relative">
@@ -812,23 +754,7 @@ export default function SynthesisViewer() {
               </div>
 
               <div className="pointer-events-auto flex flex-col gap-1">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Viewer Controls</span>
                 <div className="flex items-center gap-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl p-2 px-3 self-start shadow-xl">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-zinc-400">Depth</span>
-                    <div className="flex items-center bg-zinc-800 rounded-lg p-0.5">
-                      <button
-                        onClick={() => changeMaxDepth(-1)}
-                        className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-zinc-700 transition-colors text-zinc-300 text-xs"
-                      >−</button>
-                      <span className="text-xs font-bold text-zinc-100 w-6 text-center">{maxDepth}</span>
-                      <button
-                        onClick={() => changeMaxDepth(1)}
-                        className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-zinc-700 transition-colors text-zinc-300 text-xs"
-                      >+</button>
-                    </div>
-                  </div>
-                  <div className="w-[1px] h-4 bg-white/10" />
                   <div className="text-[10px] text-zinc-500 font-medium">
                     {nodes.filter(n => n.type === 'monster' && n.data.phase !== 'exiting' && !n.data.isContext).length} monsters
                   </div>
