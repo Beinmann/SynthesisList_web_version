@@ -246,7 +246,7 @@ export default function SynthesisViewer() {
   const [maxDepth, setMaxDepth] = useState(3)
   const [recipeIndices, setRecipeIndices] = useState<Record<string, number>>(() => {
     if (typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('dqmj2_recipe_indices')
+      const saved = localStorage.getItem('dqmj2_recipe_indices')
       if (saved) {
         try {
           return JSON.parse(saved)
@@ -333,7 +333,7 @@ export default function SynthesisViewer() {
 
   useEffect(() => {
     if (Object.keys(recipeIndices).length > 0) {
-      sessionStorage.setItem('dqmj2_recipe_indices', JSON.stringify(recipeIndices))
+      localStorage.setItem('dqmj2_recipe_indices', JSON.stringify(recipeIndices))
     }
   }, [recipeIndices])
 
