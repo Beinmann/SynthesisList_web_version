@@ -28,6 +28,19 @@ const VIEW_PADDING = 24
 // fade used for added/removed nodes.
 const PAN_MS = 350
 const FADE_MS = 350
+// Fixed 4-level tree (depths 0..3): 1 + 2 + 4 + 8 = 15 slots. Every node
+// reserves its canonical slot so the layout stays identical across
+// navigations — gaps appear where a subtree is shorter, rather than sibling
+// positions sliding horizontally to take up the slack.
+const MAX_DEPTH = 3
+
+// Canonical x for a node at (depth, slotK). Depth 0 centers on 0; at depth d
+// a node occupies 2^(MAX_DEPTH - d) leaf-slots of width NODE_W.
+function slotX(depth: number, slotK: number): number {
+  const leafSlotsPerNode = 1 << (MAX_DEPTH - depth)
+  const totalLeafSlots = 1 << MAX_DEPTH
+  return (slotK + 0.5) * leafSlotsPerNode * NODE_W - (totalLeafSlots * NODE_W) / 2
+}
 
 const FlowingEdge = ({
   id,
@@ -77,8 +90,15 @@ const EDGE_TYPES = {
 }
 
 type NavEntry = { parent: string; isParent1: boolean; recipeIdx: number }
-type AlignTo = { nodeId: string; worldPos: { x: number; y: number } }
-type PendingNav = { root: string; navHistory: NavEntry[]; alignTo: AlignTo }
+// What drove the upcoming rebuild. Consumed by the rebuild effect so
+// persistent nodes can keep their rendered id (and thus CSS-transition their
+// transform) across nav-forward / nav-back commits.
+type NavAction =
+  | { type: 'reset' }
+  | { type: 'cycle' }
+  | { type: 'fold' }
+  | { type: 'nav-forward'; dir: 'p1' | 'p2'; prevRoot: string }
+  | { type: 'nav-back'; prevRoot: string; newRoot: string; prevDir: 'p1' | 'p2' }
 type Handlers = {
   onMakeRoot: (name: string) => void
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void
@@ -125,7 +145,6 @@ function buildGraph(
   rootName: string,
   recipeIndices: Record<string, number>,
   foldedRecipes: Record<string, boolean>,
-  maxDepth: number,
   onMakeRoot: (name: string) => void,
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void,
   onToggleFold: (name: string) => void,
@@ -136,8 +155,8 @@ function buildGraph(
   const edges: Edge[] = []
   const seen = new Set<string>()
 
-  function visit(name: string, depth: number, resultId: string | null, edgeLabel: string | null) {
-    if (depth > maxDepth) return
+  function visit(name: string, depth: number, slotK: number, resultId: string | null, edgeLabel: string | null) {
+    if (depth > MAX_DEPTH) return
     const key = name.toLowerCase()
     const nodeId = edgeLabel ? `${edgeLabel}:${key}` : key
 
@@ -168,20 +187,20 @@ function buildGraph(
           recipeIndex,
           recipeCount: recipes.length,
           depth,
-          truncated: (depth === maxDepth || stopAtBase || isFolded) && recipes.length > 0,
+          truncated: (depth === MAX_DEPTH || stopAtBase || isFolded) && recipes.length > 0,
           folded: isFolded,
           leafCount: fullLeafCount(name, new Set(), recipeIndices, leafMemo, isRoot),
           onMakeRoot,
           onCycleRecipe,
           onToggleFold,
         },
-        position: { x: 0, y: 0 },
+        position: { x: slotX(depth, slotK), y: -depth * NODE_H },
       })
 
-      if (depth < maxDepth && recipes.length > 0 && !stopAtBase && !isFolded) {
+      if (depth < MAX_DEPTH && recipes.length > 0 && !stopAtBase && !isFolded) {
         const r = recipes[recipeIndex]
-        visit(r.parent1, depth + 1, nodeId, `${nodeId}>p1`)
-        visit(r.parent2, depth + 1, nodeId, `${nodeId}>p2`)
+        visit(r.parent1, depth + 1, slotK * 2, nodeId, `${nodeId}>p1`)
+        visit(r.parent2, depth + 1, slotK * 2 + 1, nodeId, `${nodeId}>p2`)
       }
     }
 
@@ -197,53 +216,8 @@ function buildGraph(
     }
   }
 
-  visit(rootName, 0, null, null)
+  visit(rootName, 0, 0, null, null)
   return { nodes, edges }
-}
-
-function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<MonsterNodeData>[] {
-  // source = result, target = ingredient
-  const ingredientsOf = new Map<string, string[]>()
-  const resultOf = new Map<string, string>()
-  for (const e of edges) {
-    const list = ingredientsOf.get(e.source) ?? []
-    list.push(e.target)
-    ingredientsOf.set(e.source, list)
-    resultOf.set(e.target, e.source)
-  }
-
-  const roots = nodes.filter(n => !resultOf.has(n.id))
-
-  // BFS depth: root at 0, ingredients go deeper upward (negative y)
-  const depth = new Map<string, number>()
-  const queue = roots.map(r => ({ id: r.id, d: 0 }))
-  while (queue.length) {
-    const { id, d } = queue.shift()!
-    if (depth.has(id)) continue
-    depth.set(id, d)
-    for (const ing of ingredientsOf.get(id) ?? []) queue.push({ id: ing, d: d + 1 })
-  }
-
-  // Post-order x assignment so each result centers under its ingredients
-  const x = new Map<string, number>()
-  let cursor = 0
-  function assignX(id: string) {
-    const ings = ingredientsOf.get(id) ?? []
-    if (ings.length === 0) {
-      x.set(id, cursor)
-      cursor += NODE_W
-    } else {
-      for (const ing of ings) assignX(ing)
-      const xs = ings.map(i => x.get(i)!)
-      x.set(id, (Math.min(...xs) + Math.max(...xs)) / 2)
-    }
-  }
-  for (const r of roots) assignX(r.id)
-
-  return nodes.map(n => ({
-    ...n,
-    position: { x: x.get(n.id) ?? 0, y: -(depth.get(n.id) ?? 0) * NODE_H },
-  }))
 }
 
 // Append the context parent + sibling nodes and their edges. Pure: the resulting
@@ -271,21 +245,19 @@ function injectContext(
   if (!rootNode || !parentRecipe) return { nodes: [...laid], edges: [...edges] }
 
   const rootX = rootNode.position.x
-  const treeXs = laid.map(n => n.position.x)
-  const treeMaxX = Math.max(...treeXs)
-  const treeMinX = Math.min(...treeXs)
 
   const siblingName = isParent1 ? parentRecipe.parent2 : parentRecipe.parent1
   const siblingKey = siblingName.toLowerCase()
   const siblingMonster = monsterByName.get(siblingKey)
   const siblingRecipes = recipesByResult.get(siblingKey) ?? []
 
-  // Sibling sits one layout slot outside the tree's leaf extent — matches the
-  // spacing layoutNodes would produce if the parent were laid out as root with
-  // the sibling as an un-expanded leaf. Parent then centers between its two
-  // immediate children (root-subtree root and sibling), which is the same
-  // midpoint formula layoutNodes uses.
-  const siblingX = isParent1 ? treeMaxX + NODE_W : treeMinX - NODE_W
+  // Sibling sits one NODE_W outside the root subtree's reserved leaf extent.
+  // Using the canonical reservation (not whatever rendered) keeps the parent
+  // and sibling pinned to stable positions across navigations.
+  const canonicalHalfExtent = ((1 << MAX_DEPTH) - 1) * NODE_W / 2
+  const siblingX = isParent1
+    ? rootX + canonicalHalfExtent + NODE_W
+    : rootX - canonicalHalfExtent - NODE_W
   const parentX = (rootX + siblingX) / 2
   const parentY = rootNode.position.y + NODE_H
 
@@ -371,21 +343,18 @@ function buildFullGraph(args: {
   navHistory: NavEntry[]
   recipeIndices: Record<string, number>
   foldedRecipes: Record<string, boolean>
-  maxDepth: number
   handlers: Handlers
 }): { nodes: Node<MonsterNodeData>[]; edges: Edge[] } {
-  const { nodes: raw, edges } = buildGraph(
+  const { nodes, edges } = buildGraph(
     args.root,
     args.recipeIndices,
     args.foldedRecipes,
-    args.maxDepth,
     args.handlers.onMakeRoot,
     args.handlers.onCycleRecipe,
     args.handlers.onToggleFold,
   )
-  const laid = layoutNodes(raw, edges)
   return injectContext(
-    laid,
+    nodes,
     edges,
     args.root,
     args.navHistory,
@@ -395,19 +364,96 @@ function buildFullGraph(args: {
   )
 }
 
-// Translate every node so the one matching `alignTo.nodeId` lands at
-// `alignTo.worldPos`. No-op if the target isn't present.
-function applyAlignment(nodes: Node<MonsterNodeData>[], alignTo: AlignTo): Node<MonsterNodeData>[] {
-  const target = nodes.find(n => n.id === alignTo.nodeId)
-  if (!target) return nodes
-  const dx = alignTo.worldPos.x - target.position.x
-  const dy = alignTo.worldPos.y - target.position.y
-  return nodes.map(n => ({ ...n, position: { x: n.position.x + dx, y: n.position.y + dy } }))
+// Translate each new node's `data.nodeId` to the canonical `data.nodeId` a
+// previous node would have had if they represent the same spot in the recipe
+// DAG. Used to look up the previous rendered id so React Flow can keep that
+// element alive and CSS-transition its transform to the new position.
+function matchKeyForAction(nid: string, action: NavAction): string {
+  if (action.type === 'nav-forward') {
+    const prevRootLc = action.prevRoot.toLowerCase()
+    const dir = action.dir
+    const opp: 'p1' | 'p2' = dir === 'p1' ? 'p2' : 'p1'
+
+    if (nid.startsWith('__ctx_parent__:')) {
+      const key = nid.slice('__ctx_parent__:'.length)
+      // New ctx parent = the root we just left.
+      return key === prevRootLc ? prevRootLc : nid
+    }
+    if (nid.startsWith('__ctx_sibling__:')) {
+      const key = nid.slice('__ctx_sibling__:'.length)
+      // New ctx sibling = the opposite-dir child we didn't dive into.
+      return `${prevRootLc}>${opp}:${key}`
+    }
+    // Tree node at path X in the new root's tree was at path prevRoot>dir:X
+    // in the previous tree.
+    return `${prevRootLc}>${dir}:${nid}`
+  }
+
+  if (action.type === 'nav-back') {
+    const prevRootLc = action.prevRoot.toLowerCase()
+    const newRootLc = action.newRoot.toLowerCase()
+    const prevDir = action.prevDir
+    const opp: 'p1' | 'p2' = prevDir === 'p1' ? 'p2' : 'p1'
+    const prevDirPrefix = `${newRootLc}>${prevDir}:`
+    const oppPrefix = `${newRootLc}>${opp}:`
+
+    if (nid === newRootLc) return `__ctx_parent__:${newRootLc}`
+    if (nid === `${prevDirPrefix}${prevRootLc}`) return prevRootLc
+    if (nid.startsWith(`${prevDirPrefix}${prevRootLc}>`)) return nid.slice(prevDirPrefix.length)
+    if (nid.startsWith(oppPrefix)) {
+      const rest = nid.slice(oppPrefix.length)
+      if (!rest.includes('>')) return `__ctx_sibling__:${rest}`
+    }
+    return nid
+  }
+
+  // reset / cycle / fold: direct match by data.nodeId.
+  return nid
+}
+
+// Assign a stable React-Flow id to each new node. Persistent nodes inherit
+// the previous render's id so React Flow recognises them as the same element
+// and CSS can animate the transform to the new position. Fresh nodes get a
+// newly-allocated sequential id from idCounterRef. Sequential ids avoid the
+// collision the old path-based remap could hit when recipe cycles make the
+// same canonical path string appear at different depths.
+function assignNodeIds(
+  newNodes: Node<MonsterNodeData>[],
+  newEdges: Edge[],
+  prevNodes: Node<MonsterNodeData>[],
+  action: NavAction,
+  idCounterRef: { current: number },
+): { nodes: Node<MonsterNodeData>[]; edges: Edge[] } {
+  const prevIdByCanonical = new Map<string, string>()
+  for (const p of prevNodes) {
+    if (p.data.phase === 'exiting') continue
+    prevIdByCanonical.set(p.data.nodeId, p.id)
+  }
+
+  const idByNid = new Map<string, string>()
+  for (const n of newNodes) {
+    const nid = n.data.nodeId
+    const key = matchKeyForAction(nid, action)
+    const prev = prevIdByCanonical.get(key)
+    if (prev !== undefined) {
+      idByNid.set(nid, prev)
+    } else {
+      idCounterRef.current += 1
+      idByNid.set(nid, `n${idCounterRef.current}`)
+    }
+  }
+
+  const nodes = newNodes.map(n => ({ ...n, id: idByNid.get(n.data.nodeId)! }))
+  const edges = newEdges.map(e => {
+    const source = idByNid.get(e.source)!
+    const target = idByNid.get(e.target)!
+    return { ...e, source, target, id: `${source}->${target}` }
+  })
+  return { nodes, edges }
 }
 
 export default function SynthesisViewer() {
   const [root, setRoot] = useState<string | null>(null)
-  const [maxDepth, setMaxDepth] = useState(3)
   const [recipeIndices, setRecipeIndices] = useState<Record<string, number>>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('dqmj2_recipe_indices')
@@ -439,239 +485,188 @@ export default function SynthesisViewer() {
   const pendingViewport = useRef<{ x: number; y: number; zoom: number } | null>(null)
 
   // Transition orchestration.
-  // - panTimeoutRef: setTimeout that commits a pending navigation after the pan.
+  // - offsetRef: world-space translation applied to every canonical position.
+  //   Updated on each nav so the focal node stays anchored while the tree
+  //   slides around it; rebuilds just add this to each canonical (x, y).
+  // - navActionRef: what caused the upcoming rebuild. Consumed once by the
+  //   effect and drives assignNodeIds so persistent nodes keep their rendered
+  //   id (and thus CSS-transition) across commits.
   // - exitTimeoutRef: setTimeout that drops exiting ghost nodes after the fade.
-  // - pendingNavRef: an in-flight nav (root/navHistory/alignTo) whose commit is delayed for the pan.
-  // - alignToRef: one-shot instruction to translate the next rebuild so a chosen node lands at a chosen world position.
   // - resetViewportRef: one-shot flag to run the default-viewport formula (search / make-root / initial).
-  // - prevNodesRef: last committed set of non-exiting nodes, for diff-based exit fades.
-  const panTimeoutRef = useRef<number | null>(null)
+  // - prevNodesRef: last committed set of non-exiting nodes, for diff-based exit fades and remap lookups.
+  const offsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
+  const navActionRef = useRef<NavAction>({ type: 'reset' })
   const exitTimeoutRef = useRef<number | null>(null)
-  const pendingNavRef = useRef<PendingNav | null>(null)
-  const alignToRef = useRef<AlignTo | null>(null)
   const resetViewportRef = useRef<boolean>(true)
   const prevNodesRef = useRef<Node<MonsterNodeData>[]>([])
+  // Monotonic counter for fresh React-Flow node ids. Using sequential ids
+  // (rather than canonical path strings) guarantees a remapped id cannot
+  // collide with a same-shape canonical id that appears somewhere else in
+  // the new tree — which can happen when recipes form cycles.
+  const idCounterRef = useRef<number>(0)
 
-  // Mirror state into refs so nav handlers can read current values without being
-  // re-memoized on every change. The handlers also write back to these refs at
-  // call time, so rapid successive presses see consistent state even before
-  // React has rendered the previous change.
-  const nodesRef = useRef(nodes)
+  // Mirror state into refs so nav handlers can read current values without
+  // being re-memoized on every change. Handlers also write back to these
+  // refs at call time, so rapid successive presses see consistent state even
+  // before React has rendered the previous change.
   const rootRef = useRef(root)
   const navHistoryRef = useRef(navHistory)
   const recipeIndicesRef = useRef(recipeIndices)
   const foldedRecipesRef = useRef(foldedRecipes)
-  const maxDepthRef = useRef(maxDepth)
-  useEffect(() => { nodesRef.current = nodes }, [nodes])
   useEffect(() => { rootRef.current = root }, [root])
   useEffect(() => { navHistoryRef.current = navHistory }, [navHistory])
   useEffect(() => { recipeIndicesRef.current = recipeIndices }, [recipeIndices])
   useEffect(() => { foldedRecipesRef.current = foldedRecipes }, [foldedRecipes])
-  useEffect(() => { maxDepthRef.current = maxDepth }, [maxDepth])
-
-  const cancelPendingNav = useCallback(() => {
-    if (panTimeoutRef.current !== null) {
-      clearTimeout(panTimeoutRef.current)
-      panTimeoutRef.current = null
-    }
-    pendingNavRef.current = null
-  }, [])
 
   const handleMakeRoot = useCallback((name: string) => {
-    cancelPendingNav()
-    alignToRef.current = null
-    resetViewportRef.current = true
     rootRef.current = name
     navHistoryRef.current = []
+    offsetRef.current = { x: 0, y: 0 }
+    navActionRef.current = { type: 'reset' }
+    resetViewportRef.current = true
     setRoot(name)
     setNavHistory([])
-  }, [cancelPendingNav])
+  }, [])
 
   const handleSelect = useCallback((name: string) => {
-    cancelPendingNav()
-    alignToRef.current = null
-    resetViewportRef.current = true
     rootRef.current = name
     navHistoryRef.current = []
+    offsetRef.current = { x: 0, y: 0 }
+    navActionRef.current = { type: 'reset' }
+    resetViewportRef.current = true
     setRoot(name)
     setNavHistory([])
-  }, [cancelPendingNav])
+  }, [])
 
   const handleCycleRecipe = useCallback((nodeId: string, dir: 1 | -1) => {
-    cancelPendingNav()
     const key = nodeId.split(':').at(-1)!
     const recipes = recipesByResult.get(key) ?? []
     if (recipes.length < 2) return
 
-    // Align the node whose recipe just changed to its current position so the
-    // swap pivots around it instead of letting the rest of the tree reflow
-    // across the screen.
-    const focal = nodesRef.current.find(n => n.id === nodeId && n.data.phase !== 'exiting')
-    if (focal) {
-      alignToRef.current = { nodeId, worldPos: focal.position }
-    }
-
+    // No offset change — with canonical slot positions, the cycled node and
+    // everything not in its subtree stays put. New subtree nodes fade in,
+    // replaced ones fade out.
+    navActionRef.current = { type: 'cycle' }
     const prev = recipeIndicesRef.current
     const cur = prev[key] ?? 0
     const next = { ...prev, [key]: (cur + dir + recipes.length) % recipes.length }
     recipeIndicesRef.current = next
     setRecipeIndices(next)
-  }, [cancelPendingNav])
+  }, [])
 
   const handleToggleFold = useCallback((name: string) => {
-    cancelPendingNav()
     const key = name.toLowerCase()
     const recipes = recipesByResult.get(key) ?? []
     if (recipes.length === 0) return
 
-    // fold is keyed by monster name — find a rendered instance (root first,
-    // else the first descendant) to use as the alignment anchor.
-    const current = nodesRef.current.filter(n => n.data.phase !== 'exiting')
-    const rootKey = rootRef.current?.toLowerCase() ?? null
-    let focal: Node<MonsterNodeData> | undefined
-    if (rootKey === key) {
-      focal = current.find(n => n.id === key)
-    } else {
-      focal = current.find(n => n.id.split(':').at(-1) === key)
-    }
-    if (focal) {
-      alignToRef.current = { nodeId: focal.id, worldPos: focal.position }
-    }
-
+    navActionRef.current = { type: 'fold' }
     const prev = foldedRecipesRef.current
     const nextMap = { ...prev }
     if (nextMap[key]) delete nextMap[key]
     else nextMap[key] = true
     foldedRecipesRef.current = nextMap
     setFoldedRecipes(nextMap)
-  }, [cancelPendingNav])
+  }, [])
 
-  const changeMaxDepth = useCallback((delta: 1 | -1) => {
-    cancelPendingNav()
-    const rootKey = rootRef.current?.toLowerCase()
-    if (rootKey) {
-      const focal = nodesRef.current.find(n => n.id === rootKey && n.data.phase !== 'exiting')
-      if (focal) {
-        alignToRef.current = { nodeId: rootKey, worldPos: focal.position }
-      }
-    }
-    setMaxDepth(d => {
-      const next = Math.max(1, Math.min(8, d + delta))
-      maxDepthRef.current = next
-      return next
-    })
-  }, [cancelPendingNav])
-
-  // The "effective" tree a nav handler reasons about: if a prior pending nav
-  // is still panning, simulate its post-commit layout (deterministic via
-  // buildFullGraph + applyAlignment). Otherwise use the currently rendered
-  // nodes (minus any exiting ghosts).
-  const effectiveTree = useCallback((): { nodes: Node<MonsterNodeData>[]; root: string; navHistory: NavEntry[] } | null => {
-    const handlers: Handlers = {
-      onMakeRoot: handleMakeRoot,
-      onCycleRecipe: handleCycleRecipe,
-      onToggleFold: handleToggleFold,
-    }
-    if (pendingNavRef.current) {
-      const p = pendingNavRef.current
-      const built = buildFullGraph({
-        root: p.root,
-        navHistory: p.navHistory,
-        recipeIndices: recipeIndicesRef.current,
-        foldedRecipes: foldedRecipesRef.current,
-        maxDepth: maxDepthRef.current,
-        handlers,
-      }).nodes
-      return { nodes: applyAlignment(built, p.alignTo), root: p.root, navHistory: p.navHistory }
-    }
-    if (!rootRef.current) return null
-    return {
-      nodes: nodesRef.current.filter(n => n.data.phase !== 'exiting'),
-      root: rootRef.current,
-      navHistory: navHistoryRef.current,
-    }
-  }, [handleMakeRoot, handleCycleRecipe, handleToggleFold])
-
-  const startPan = useCallback((focalPos: { x: number; y: number }, postNavHasParent: boolean) => {
+  const startCameraPan = useCallback((newRootWorld: { x: number; y: number }, hasParent: boolean) => {
     const rf = rfInstance.current
     const container = containerRef.current
     if (!rf || !container) return
     const { width, height } = container.getBoundingClientRect()
     const zoom = rf.getViewport().zoom || 1
-    // After the commit, the new root will sit at focalPos; the tree's visual
-    // bottom will be NODE_H below that (no parent ctx) or 2*NODE_H below
-    // (parent ctx also rendered). Place that bottom at the usual padded
-    // screen bottom so the landing spot looks identical to a cold default.
-    const bottomOffset = postNavHasParent ? 2 * NODE_H : NODE_H
+    // After the commit the new root sits at newRootWorld; the visual bottom
+    // of the tree is NODE_H below that (no parent ctx) or 2*NODE_H below
+    // (parent ctx also rendered). Park that bottom at the usual padded
+    // screen bottom so the landing spot matches a cold default.
+    const bottomOffset = hasParent ? 2 * NODE_H : NODE_H
     const target = {
-      x: width / 2 - (focalPos.x + NODE_W / 2) * zoom,
-      y: height - VIEW_PADDING - (focalPos.y + bottomOffset) * zoom,
+      x: width / 2 - (newRootWorld.x + NODE_W / 2) * zoom,
+      y: height - VIEW_PADDING - (newRootWorld.y + bottomOffset) * zoom,
       zoom,
     }
     rf.setViewport(target, { duration: PAN_MS })
   }, [])
 
-  const scheduleCommit = useCallback(() => {
-    if (panTimeoutRef.current !== null) clearTimeout(panTimeoutRef.current)
-    panTimeoutRef.current = window.setTimeout(() => {
-      const p = pendingNavRef.current
-      if (!p) return
-      pendingNavRef.current = null
-      panTimeoutRef.current = null
-      alignToRef.current = p.alignTo
-      // Sync refs alongside setState so a follow-up handler in the same tick
-      // (before React renders) reads consistent values.
-      rootRef.current = p.root
-      navHistoryRef.current = p.navHistory
-      setRoot(p.root)
-      setNavHistory(p.navHistory)
-    }, PAN_MS)
-  }, [])
-
-  const navigateToChild = useCallback((dir: 'left' | 'right') => {
-    const eff = effectiveTree()
-    if (!eff) return
-    const rootKey = eff.root.toLowerCase()
+  const navigateToChild = useCallback((direction: 'left' | 'right') => {
+    const currentRoot = rootRef.current
+    if (!currentRoot) return
+    const rootKey = currentRoot.toLowerCase()
     const recipes = recipesByResult.get(rootKey) ?? []
     const idx = recipeIndicesRef.current[rootKey] ?? 0
     const recipe = recipes[idx]
     if (!recipe) return
-    const targetName = dir === 'left' ? recipe.parent1 : recipe.parent2
-    const targetKey = targetName.toLowerCase()
-    const focalId = `${rootKey}>${dir === 'left' ? 'p1' : 'p2'}:${targetKey}`
-    const focal = eff.nodes.find(n => n.id === focalId)
-    if (!focal) return
+    const targetName = direction === 'left' ? recipe.parent1 : recipe.parent2
+
+    // Focal = the depth-1 child we're diving into. Its canonical position is
+    // slotX(1, dir-slot); in world coords it's canonical + current offset.
+    // After the commit the new root lands at that world position, so the new
+    // offset is exactly the focal's current world.
+    const focalCanonical = { x: slotX(1, direction === 'left' ? 0 : 1), y: -NODE_H }
+    const prevOffset = offsetRef.current
+    const newOffset = {
+      x: focalCanonical.x + prevOffset.x,
+      y: focalCanonical.y + prevOffset.y,
+    }
 
     const nextHistory: NavEntry[] = [
-      ...eff.navHistory,
-      { parent: eff.root, isParent1: dir === 'left', recipeIdx: idx },
+      ...navHistoryRef.current,
+      { parent: currentRoot, isParent1: direction === 'left', recipeIdx: idx },
     ]
-    pendingNavRef.current = {
-      root: targetName,
-      navHistory: nextHistory,
-      alignTo: { nodeId: targetKey, worldPos: focal.position },
+
+    rootRef.current = targetName
+    navHistoryRef.current = nextHistory
+    offsetRef.current = newOffset
+    navActionRef.current = {
+      type: 'nav-forward',
+      dir: direction === 'left' ? 'p1' : 'p2',
+      prevRoot: currentRoot,
     }
-    startPan(focal.position, nextHistory.length > 0)
-    scheduleCommit()
-  }, [effectiveTree, startPan, scheduleCommit])
+
+    setRoot(targetName)
+    setNavHistory(nextHistory)
+
+    startCameraPan(newOffset, nextHistory.length > 0)
+  }, [startCameraPan])
 
   const navigateBack = useCallback(() => {
-    const eff = effectiveTree()
-    if (!eff || eff.navHistory.length === 0) return
-    const prev = eff.navHistory[eff.navHistory.length - 1]
-    const focal = eff.nodes.find(n => n.id.startsWith('__ctx_parent__'))
-    if (!focal) return
+    const history = navHistoryRef.current
+    if (history.length === 0) return
+    const currentRoot = rootRef.current
+    if (!currentRoot) return
+    const prev = history[history.length - 1]
+    const prevDir: 'p1' | 'p2' = prev.isParent1 ? 'p1' : 'p2'
 
-    const nextHistory = eff.navHistory.slice(0, -1)
-    const targetKey = prev.parent.toLowerCase()
-    pendingNavRef.current = {
-      root: prev.parent,
-      navHistory: nextHistory,
-      alignTo: { nodeId: targetKey, worldPos: focal.position },
+    // Ctx parent's canonical position in the current tree — same formula
+    // injectContext uses. The new root (= prev.parent) lands there.
+    const canonicalHalfExtent = ((1 << MAX_DEPTH) - 1) * NODE_W / 2
+    const siblingCanonicalX = prev.isParent1
+      ? canonicalHalfExtent + NODE_W
+      : -(canonicalHalfExtent + NODE_W)
+    const parentCanonical = { x: siblingCanonicalX / 2, y: NODE_H }
+    const prevOffset = offsetRef.current
+    const newOffset = {
+      x: parentCanonical.x + prevOffset.x,
+      y: parentCanonical.y + prevOffset.y,
     }
-    startPan(focal.position, nextHistory.length > 0)
-    scheduleCommit()
-  }, [effectiveTree, startPan, scheduleCommit])
+
+    const nextHistory = history.slice(0, -1)
+    const newRoot = prev.parent
+
+    rootRef.current = newRoot
+    navHistoryRef.current = nextHistory
+    offsetRef.current = newOffset
+    navActionRef.current = {
+      type: 'nav-back',
+      prevRoot: currentRoot,
+      newRoot,
+      prevDir,
+    }
+
+    setRoot(newRoot)
+    setNavHistory(nextHistory)
+
+    startCameraPan(newOffset, nextHistory.length > 0)
+  }, [startCameraPan])
 
   useEffect(() => {
     if (Object.keys(recipeIndices).length > 0) {
@@ -699,7 +694,6 @@ export default function SynthesisViewer() {
 
   useEffect(() => {
     return () => {
-      if (panTimeoutRef.current !== null) clearTimeout(panTimeoutRef.current)
       if (exitTimeoutRef.current !== null) clearTimeout(exitTimeoutRef.current)
     }
   }, [])
@@ -711,27 +705,42 @@ export default function SynthesisViewer() {
       onCycleRecipe: handleCycleRecipe,
       onToggleFold: handleToggleFold,
     }
-    const built = buildFullGraph({ root, navHistory, recipeIndices, foldedRecipes, maxDepth, handlers })
+    const built = buildFullGraph({ root, navHistory, recipeIndices, foldedRecipes, handlers })
 
-    let aligned = built.nodes
-    if (alignToRef.current) {
-      aligned = applyAlignment(built.nodes, alignToRef.current)
-      alignToRef.current = null
-    }
+    // Apply the current world offset to every canonical position.
+    const offset = offsetRef.current
+    const offsetNodes = built.nodes.map(n => ({
+      ...n,
+      position: { x: n.position.x + offset.x, y: n.position.y + offset.y },
+    }))
 
-    // Ghost-nodes for fade-out: any previously committed node whose id is not
-    // in the new set gets re-included with phase='exiting' so CSS can fade it
-    // to opacity 0 over FADE_MS, then a timeout drops it.
+    // Assign persistent React-Flow ids so the same element survives the
+    // rebuild and CSS can transition its transform to the new position.
+    // Fresh ids are sequential integers — never canonical path strings —
+    // so a remapped id cannot accidentally equal a canonical id elsewhere
+    // in the same render (which can happen when recipes cycle).
+    const action = navActionRef.current
+    navActionRef.current = { type: 'reset' }
+    const { nodes: remappedNodes, edges: remappedEdges } = assignNodeIds(
+      offsetNodes,
+      built.edges,
+      prevNodesRef.current,
+      action,
+      idCounterRef,
+    )
+
+    // Ghost nodes for the exit fade: any previously rendered node whose id is
+    // not in the new (remapped) set gets re-included with phase='exiting'.
     const prevCommitted = prevNodesRef.current
-    const newIds = new Set(aligned.map(n => n.id))
+    const newIds = new Set(remappedNodes.map(n => n.id))
     const exiting: Node<MonsterNodeData>[] = prevCommitted
-      .filter(n => !newIds.has(n.id))
+      .filter(n => n.data.phase !== 'exiting' && !newIds.has(n.id))
       .map(n => ({ ...n, data: { ...n.data, phase: 'exiting' as const } }))
 
-    prevNodesRef.current = aligned
+    prevNodesRef.current = remappedNodes
 
-    setNodes([...aligned, ...exiting])
-    setEdges(built.edges)
+    setNodes([...remappedNodes, ...exiting])
+    setEdges(remappedEdges)
 
     if (exitTimeoutRef.current !== null) clearTimeout(exitTimeoutRef.current)
     if (exiting.length > 0) {
@@ -741,14 +750,15 @@ export default function SynthesisViewer() {
       }, FADE_MS)
     }
 
-    // Viewport. For navigation/fold/cycle the camera is already where it
-    // should be (pan ended on the focal; alignment pinned the focal there).
-    // Only reset on a true change of context: search, make-root, or initial.
+    // Viewport. For nav the camera pan was started in the handler alongside
+    // the state update so the camera and the node-transform transitions run
+    // in lockstep. Cycle/fold don't move the camera. Reset only on a true
+    // change of context: search, make-root, or initial.
     if (resetViewportRef.current) {
       resetViewportRef.current = false
       const container = containerRef.current
       if (!container) return
-      const rootNode = aligned.find(n => n.id === root.toLowerCase())
+      const rootNode = remappedNodes.find(n => n.data.nodeId === root.toLowerCase())
       if (!rootNode) return
       const { width, height } = container.getBoundingClientRect()
       const levelsToShow = 5
@@ -767,7 +777,7 @@ export default function SynthesisViewer() {
         pendingViewport.current = vp
       }
     }
-  }, [root, recipeIndices, foldedRecipes, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, handleToggleFold, setNodes, setEdges])
+  }, [root, recipeIndices, foldedRecipes, navHistory, handleMakeRoot, handleCycleRecipe, handleToggleFold, setNodes, setEdges])
 
   return (
     <div className="flex flex-col gap-4 relative">
@@ -785,6 +795,7 @@ export default function SynthesisViewer() {
         }
         .react-flow__node {
           animation: dq-node-appear ${FADE_MS}ms ease-out;
+          transition: transform ${PAN_MS}ms cubic-bezier(0.45, 0, 0.2, 1);
         }
         .react-flow__controls {
           box-shadow: none !important;
@@ -812,23 +823,7 @@ export default function SynthesisViewer() {
               </div>
 
               <div className="pointer-events-auto flex flex-col gap-1">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Viewer Controls</span>
                 <div className="flex items-center gap-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl p-2 px-3 self-start shadow-xl">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-zinc-400">Depth</span>
-                    <div className="flex items-center bg-zinc-800 rounded-lg p-0.5">
-                      <button
-                        onClick={() => changeMaxDepth(-1)}
-                        className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-zinc-700 transition-colors text-zinc-300 text-xs"
-                      >−</button>
-                      <span className="text-xs font-bold text-zinc-100 w-6 text-center">{maxDepth}</span>
-                      <button
-                        onClick={() => changeMaxDepth(1)}
-                        className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-zinc-700 transition-colors text-zinc-300 text-xs"
-                      >+</button>
-                    </div>
-                  </div>
-                  <div className="w-[1px] h-4 bg-white/10" />
                   <div className="text-[10px] text-zinc-500 font-medium">
                     {nodes.filter(n => n.type === 'monster' && n.data.phase !== 'exiting' && !n.data.isContext).length} monsters
                   </div>
