@@ -59,6 +59,7 @@ Logical sections, top-to-bottom:
 **State owned by the component:**
 - `root: string | null` — current root monster name (title case).
 - `recipeIndices: Record<string, number>` — keyed by lowercase name, persisted to `sessionStorage['dqmj2_recipe_indices']`.
+- `foldedRecipes: Record<string, boolean>` — keyed by lowercase name, persisted to `sessionStorage['dqmj2_folded_recipes']`. Folding stops recursion in `buildGraph` (same branch as `stopAtBase` / `maxDepth`) and renders the node as truncated. Applies to any occurrence of that monster in the tree, not just the root.
 - `navHistory: NavEntry[]` — drill-down stack; each entry remembers parent + which side + which recipe index was used.
 - `maxDepth: number` — 1–8.
 - React Flow's own `nodes`/`edges` state (via `useNodesState`/`useEdgesState`).
@@ -83,7 +84,7 @@ Logical sections, top-to-bottom:
 
 **`SynthesisViewerLoader` exists for a reason.** `@xyflow/react` + this file's sessionStorage access are client-only. `page.tsx` imports the loader, which `dynamic(..., { ssr: false })`s the viewer. Do not import `SynthesisViewer` directly into a server component.
 
-**sessionStorage schema is uncommitted.** `dqmj2_recipe_indices` is a flat `{ [lowercaseName]: number }`. If you change the shape (e.g. to version it), guard the parse — currently a malformed value is caught and logged but returns `{}`.
+**sessionStorage schema is uncommitted.** `dqmj2_recipe_indices` is a flat `{ [lowercaseName]: number }`; `dqmj2_folded_recipes` is a flat `{ [lowercaseName]: true }` (entries are deleted when toggled off, and the key is removed entirely when the map empties). If you change either shape (e.g. to version it), guard the parse — currently a malformed value is caught and logged but returns `{}`.
 
 **Base monsters as root.** `fullLeafCount(name, ..., isRoot=true)` intentionally recurses through a base monster when it's the root — otherwise the root would always report 1 leaf. The `stopAtBase` gate in `buildGraph` has the matching `!isRoot` carve-out. Keep these two in lockstep.
 

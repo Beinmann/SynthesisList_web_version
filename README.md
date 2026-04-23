@@ -18,6 +18,7 @@ This is an adaptation of an older project: [github.com/Beinmann/SynthesisList](h
 - **Keyboard Shortcuts**:
     - `←` / `→` (Left/Right Arrow): Drill into the first or second ingredient of the current root.
     - `↓` (Down Arrow): Go back to the previous monster in your navigation history.
+    - `↑` (Up Arrow): Fold/unfold the current root's recipe. Folded state persists per-monster for the session.
 - **Adjustable Depth**: Control how many levels of the tree are shown (1–8, default 3) using viewer controls.
 - **Effort Metrics**: Every node displays a "Leaf Count" — the total number of "base" (catchable) monsters required to synthesize it.
 
