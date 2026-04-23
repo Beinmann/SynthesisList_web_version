@@ -162,7 +162,10 @@ function buildGraph(
       const isBase = tags.includes('base')
       const isRoot = depth === 0
       const stopAtBase = isBase && !isRoot
-      const isFolded = foldedRecipes[key] === true
+      // Root always displays its recipe even if flagged as folded — the fold
+      // flag is a "how to render elsewhere" hint and must not hide the tree
+      // the user is currently focused on. Stored state stays untouched.
+      const isFolded = !isRoot && foldedRecipes[key] === true
 
       nodes.push({
         id: nodeId,
@@ -695,11 +698,10 @@ export default function SynthesisViewer() {
       if (e.key === 'ArrowLeft')  { e.preventDefault(); navigateToChild('left') }
       if (e.key === 'ArrowRight') { e.preventDefault(); navigateToChild('right') }
       if (e.key === 'ArrowDown')  { e.preventDefault(); navigateBack() }
-      if (e.key === 'ArrowUp')    { e.preventDefault(); if (rootRef.current) handleToggleFold(rootRef.current) }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [navigateToChild, navigateBack, handleToggleFold])
+  }, [navigateToChild, navigateBack])
 
   useEffect(() => {
     return () => {
@@ -915,7 +917,6 @@ export default function SynthesisViewer() {
         <p className="text-[10px] text-zinc-600 font-medium flex items-center gap-3">
           <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">←</kbd> <kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">→</kbd> Navigate</span>
           <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">↓</kbd> Back</span>
-          <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">↑</kbd> Fold</span>
           <span className="flex items-center gap-1"><kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">‹</kbd> <kbd className="bg-zinc-800 px-1 rounded border border-white/5 text-zinc-400">›</kbd> Cycle</span>
         </p>
         <p className="text-[10px] text-zinc-700 font-bold uppercase tracking-widest">
