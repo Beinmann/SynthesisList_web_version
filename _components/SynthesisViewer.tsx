@@ -364,61 +364,32 @@ function buildFullGraph(args: {
   )
 }
 
-// Rewrite new node ids (and edge source/target) to re-use the rendered ids of
-// matching previous nodes so React Flow recognises them as the same element
-// and CSS can animate their transform to the new position. Only applies to
-// nav-forward and nav-back — the tree's root changes deterministically and
-// every persistent node's identity can be derived from the nav direction.
-function remapForNav(
-  newNodes: Node<MonsterNodeData>[],
-  newEdges: Edge[],
-  prevNodes: Node<MonsterNodeData>[],
-  action: NavAction,
-): { nodes: Node<MonsterNodeData>[]; edges: Edge[] } {
-  if (action.type === 'reset' || action.type === 'cycle' || action.type === 'fold') {
-    return { nodes: newNodes, edges: newEdges }
-  }
-
-  // prev data.nodeId → prev rendered id (may differ from canonical if that
-  // prev was itself the result of a remap on an earlier rebuild).
-  const prevRenderedByCanonical = new Map<string, string>()
-  for (const p of prevNodes) {
-    if (p.data.phase === 'exiting') continue
-    prevRenderedByCanonical.set(p.data.nodeId, p.id)
-  }
-
-  // new data.nodeId → remapped rendered id.
-  const idRewrite = new Map<string, string>()
-
+// Translate each new node's `data.nodeId` to the canonical `data.nodeId` a
+// previous node would have had if they represent the same spot in the recipe
+// DAG. Used to look up the previous rendered id so React Flow can keep that
+// element alive and CSS-transition its transform to the new position.
+function matchKeyForAction(nid: string, action: NavAction): string {
   if (action.type === 'nav-forward') {
     const prevRootLc = action.prevRoot.toLowerCase()
     const dir = action.dir
     const opp: 'p1' | 'p2' = dir === 'p1' ? 'p2' : 'p1'
 
-    for (const n of newNodes) {
-      const nid = n.data.nodeId
-      let prevCanonical: string | null = null
-
-      if (nid.startsWith('__ctx_parent__:')) {
-        const key = nid.slice('__ctx_parent__:'.length)
-        // New ctx parent = the root we just left.
-        if (key === prevRootLc) prevCanonical = prevRootLc
-      } else if (nid.startsWith('__ctx_sibling__:')) {
-        const key = nid.slice('__ctx_sibling__:'.length)
-        // New ctx sibling = the opposite-dir child we didn't dive into.
-        prevCanonical = `${prevRootLc}>${opp}:${key}`
-      } else {
-        // Tree node at path X in the new root's tree was at path prevRoot>dir:X
-        // in the previous tree.
-        prevCanonical = `${prevRootLc}>${dir}:${nid}`
-      }
-
-      if (prevCanonical !== null) {
-        const prevRendered = prevRenderedByCanonical.get(prevCanonical)
-        if (prevRendered !== undefined) idRewrite.set(nid, prevRendered)
-      }
+    if (nid.startsWith('__ctx_parent__:')) {
+      const key = nid.slice('__ctx_parent__:'.length)
+      // New ctx parent = the root we just left.
+      return key === prevRootLc ? prevRootLc : nid
     }
-  } else if (action.type === 'nav-back') {
+    if (nid.startsWith('__ctx_sibling__:')) {
+      const key = nid.slice('__ctx_sibling__:'.length)
+      // New ctx sibling = the opposite-dir child we didn't dive into.
+      return `${prevRootLc}>${opp}:${key}`
+    }
+    // Tree node at path X in the new root's tree was at path prevRoot>dir:X
+    // in the previous tree.
+    return `${prevRootLc}>${dir}:${nid}`
+  }
+
+  if (action.type === 'nav-back') {
     const prevRootLc = action.prevRoot.toLowerCase()
     const newRootLc = action.newRoot.toLowerCase()
     const prevDir = action.prevDir
@@ -426,53 +397,58 @@ function remapForNav(
     const prevDirPrefix = `${newRootLc}>${prevDir}:`
     const oppPrefix = `${newRootLc}>${opp}:`
 
-    for (const n of newNodes) {
-      const nid = n.data.nodeId
-      let prevCanonical: string | null = null
+    if (nid === newRootLc) return `__ctx_parent__:${newRootLc}`
+    if (nid === `${prevDirPrefix}${prevRootLc}`) return prevRootLc
+    if (nid.startsWith(`${prevDirPrefix}${prevRootLc}>`)) return nid.slice(prevDirPrefix.length)
+    if (nid.startsWith(oppPrefix)) {
+      const rest = nid.slice(oppPrefix.length)
+      if (!rest.includes('>')) return `__ctx_sibling__:${rest}`
+    }
+    return nid
+  }
 
-      if (nid === newRootLc) {
-        // New root was the ctx parent in the previous tree.
-        prevCanonical = `__ctx_parent__:${newRootLc}`
-      } else if (nid === `${prevDirPrefix}${prevRootLc}`) {
-        // Depth-1 child on prevDir side is the monster we just left.
-        prevCanonical = prevRootLc
-      } else if (nid.startsWith(`${prevDirPrefix}${prevRootLc}>`)) {
-        // Deeper descendant inside the subtree we came from: strip the
-        // newRoot>prevDir: prefix to recover the path it had in the previous
-        // tree (which was rooted at prevRoot).
-        prevCanonical = nid.slice(prevDirPrefix.length)
-      } else if (nid.startsWith(oppPrefix)) {
-        const rest = nid.slice(oppPrefix.length)
-        // The depth-1 opp-side child was the ctx sibling in the previous tree.
-        // Deeper nodes on that side didn't exist in the previous tree at all.
-        if (!rest.includes('>')) {
-          prevCanonical = `__ctx_sibling__:${rest}`
-        }
-      }
+  // reset / cycle / fold: direct match by data.nodeId.
+  return nid
+}
 
-      if (prevCanonical !== null) {
-        const prevRendered = prevRenderedByCanonical.get(prevCanonical)
-        if (prevRendered !== undefined) idRewrite.set(nid, prevRendered)
-      }
+// Assign a stable React-Flow id to each new node. Persistent nodes inherit
+// the previous render's id so React Flow recognises them as the same element
+// and CSS can animate the transform to the new position. Fresh nodes get a
+// newly-allocated sequential id from idCounterRef. Sequential ids avoid the
+// collision the old path-based remap could hit when recipe cycles make the
+// same canonical path string appear at different depths.
+function assignNodeIds(
+  newNodes: Node<MonsterNodeData>[],
+  newEdges: Edge[],
+  prevNodes: Node<MonsterNodeData>[],
+  action: NavAction,
+  idCounterRef: { current: number },
+): { nodes: Node<MonsterNodeData>[]; edges: Edge[] } {
+  const prevIdByCanonical = new Map<string, string>()
+  for (const p of prevNodes) {
+    if (p.data.phase === 'exiting') continue
+    prevIdByCanonical.set(p.data.nodeId, p.id)
+  }
+
+  const idByNid = new Map<string, string>()
+  for (const n of newNodes) {
+    const nid = n.data.nodeId
+    const key = matchKeyForAction(nid, action)
+    const prev = prevIdByCanonical.get(key)
+    if (prev !== undefined) {
+      idByNid.set(nid, prev)
+    } else {
+      idCounterRef.current += 1
+      idByNid.set(nid, `n${idCounterRef.current}`)
     }
   }
 
-  const nodes = newNodes.map(n => {
-    const rewritten = idRewrite.get(n.data.nodeId)
-    return rewritten !== undefined ? { ...n, id: rewritten } : n
-  })
-
+  const nodes = newNodes.map(n => ({ ...n, id: idByNid.get(n.data.nodeId)! }))
   const edges = newEdges.map(e => {
-    const newSource = idRewrite.get(e.source) ?? e.source
-    const newTarget = idRewrite.get(e.target) ?? e.target
-    return {
-      ...e,
-      source: newSource,
-      target: newTarget,
-      id: `${newSource}->${newTarget}`,
-    }
+    const source = idByNid.get(e.source)!
+    const target = idByNid.get(e.target)!
+    return { ...e, source, target, id: `${source}->${target}` }
   })
-
   return { nodes, edges }
 }
 
@@ -513,7 +489,7 @@ export default function SynthesisViewer() {
   //   Updated on each nav so the focal node stays anchored while the tree
   //   slides around it; rebuilds just add this to each canonical (x, y).
   // - navActionRef: what caused the upcoming rebuild. Consumed once by the
-  //   effect and drives remapForNav so persistent nodes keep their rendered
+  //   effect and drives assignNodeIds so persistent nodes keep their rendered
   //   id (and thus CSS-transition) across commits.
   // - exitTimeoutRef: setTimeout that drops exiting ghost nodes after the fade.
   // - resetViewportRef: one-shot flag to run the default-viewport formula (search / make-root / initial).
@@ -523,6 +499,11 @@ export default function SynthesisViewer() {
   const exitTimeoutRef = useRef<number | null>(null)
   const resetViewportRef = useRef<boolean>(true)
   const prevNodesRef = useRef<Node<MonsterNodeData>[]>([])
+  // Monotonic counter for fresh React-Flow node ids. Using sequential ids
+  // (rather than canonical path strings) guarantees a remapped id cannot
+  // collide with a same-shape canonical id that appears somewhere else in
+  // the new tree — which can happen when recipes form cycles.
+  const idCounterRef = useRef<number>(0)
 
   // Mirror state into refs so nav handlers can read current values without
   // being re-memoized on every change. Handlers also write back to these
@@ -733,15 +714,19 @@ export default function SynthesisViewer() {
       position: { x: n.position.x + offset.x, y: n.position.y + offset.y },
     }))
 
-    // Remap persistent-node ids so React Flow recognises them across the
-    // rebuild and CSS can transition their transform to the new position.
+    // Assign persistent React-Flow ids so the same element survives the
+    // rebuild and CSS can transition its transform to the new position.
+    // Fresh ids are sequential integers — never canonical path strings —
+    // so a remapped id cannot accidentally equal a canonical id elsewhere
+    // in the same render (which can happen when recipes cycle).
     const action = navActionRef.current
     navActionRef.current = { type: 'reset' }
-    const { nodes: remappedNodes, edges: remappedEdges } = remapForNav(
+    const { nodes: remappedNodes, edges: remappedEdges } = assignNodeIds(
       offsetNodes,
       built.edges,
       prevNodesRef.current,
       action,
+      idCounterRef,
     )
 
     // Ghost nodes for the exit fade: any previously rendered node whose id is
