@@ -118,14 +118,20 @@ function fullLeafCount(
   return n
 }
 
+// Safety cap: prevents runaway recursion if a user expands into a pathological
+// chain (nodeIds include path so cycles don't dedupe via `seen`).
+const DEPTH_HARD_CAP = 50
+
 function buildGraph(
   rootName: string,
   recipeIndices: Record<string, number>,
   foldedRecipes: Record<string, boolean>,
+  expandedNodes: Record<string, boolean>,
   maxDepth: number,
   onMakeRoot: (name: string) => void,
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void,
   onToggleFold: (name: string) => void,
+  onToggleExpand: (nodeId: string) => void,
 ) {
   const leafMemo = new Map<string, number>()
   const nodes: Node<MonsterNodeData>[] = []
@@ -134,7 +140,7 @@ function buildGraph(
   const seen = new Set<string>()
 
   function visit(name: string, depth: number, resultId: string | null, edgeLabel: string | null) {
-    if (depth > maxDepth) return
+    if (depth > DEPTH_HARD_CAP) return
     const key = name.toLowerCase()
     const nodeId = edgeLabel ? `${edgeLabel}:${key}` : key
 
@@ -149,6 +155,14 @@ function buildGraph(
       const isRoot = depth === 0
       const stopAtBase = isBase && !isRoot
       const isFolded = foldedRecipes[key] === true
+      const hasSubtree = recipes.length > 0 && !stopAtBase
+      const atOrPastDepth = depth >= maxDepth
+      const isExpandedPast = expandedNodes[nodeId] === true
+      // depth-limited: would recurse if not for the depth cap, and user hasn't opted in to expand
+      const depthLimited = atOrPastDepth && hasSubtree && !isFolded && !isExpandedPast
+      // expanded-past: user has overridden the depth cap here
+      const expandedPast = atOrPastDepth && hasSubtree && !isFolded && isExpandedPast
+      const canRecurse = hasSubtree && !isFolded && (!atOrPastDepth || isExpandedPast)
 
       nodes.push({
         id: nodeId,
@@ -162,17 +176,20 @@ function buildGraph(
           recipeIndex,
           recipeCount: recipes.length,
           depth,
-          truncated: (depth === maxDepth || stopAtBase || isFolded) && recipes.length > 0,
+          truncated: (depthLimited || stopAtBase || isFolded) && recipes.length > 0,
           folded: isFolded,
+          depthLimited,
+          expandedPast,
           leafCount: fullLeafCount(name, new Set(), recipeIndices, leafMemo, isRoot),
           onMakeRoot,
           onCycleRecipe,
           onToggleFold,
+          onToggleExpand,
         },
         position: { x: 0, y: 0 },
       })
 
-      if (depth < maxDepth && recipes.length > 0 && !stopAtBase && !isFolded) {
+      if (canRecurse) {
         const r = recipes[recipeIndex]
         visit(r.parent1, depth + 1, nodeId, `${nodeId}>p1`)
         visit(r.parent2, depth + 1, nodeId, `${nodeId}>p2`)
@@ -269,6 +286,9 @@ export default function SynthesisViewer() {
     }
     return {}
   })
+  // Per-nodeId override for the depth cap — lets the user walk one level at a time
+  // past maxDepth. Scoped to the current root's tree (nodeIds reset on root change).
+  const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({})
   const [navHistory, setNavHistory] = useState<NavEntry[]>([])
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<MonsterNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -281,11 +301,13 @@ export default function SynthesisViewer() {
   const handleMakeRoot = useCallback((name: string) => {
     setRoot(name)
     setNavHistory([])
+    setExpandedNodes({})
   }, [])
 
   const handleSelect = useCallback((name: string) => {
     setRoot(name)
     setNavHistory([])
+    setExpandedNodes({})
   }, [])
 
   const handleCycleRecipe = useCallback((nodeId: string, dir: 1 | -1) => {
@@ -333,6 +355,15 @@ export default function SynthesisViewer() {
     })
   }, [])
 
+  const handleToggleExpand = useCallback((nodeId: string) => {
+    setExpandedNodes(prev => {
+      const next = { ...prev }
+      if (next[nodeId]) delete next[nodeId]
+      else next[nodeId] = true
+      return next
+    })
+  }, [])
+
   useEffect(() => {
     if (Object.keys(recipeIndices).length > 0) {
       localStorage.setItem('dqmj2_recipe_indices', JSON.stringify(recipeIndices))
@@ -360,7 +391,7 @@ export default function SynthesisViewer() {
 
   useEffect(() => {
     if (!root) return
-    const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, foldedRecipes, maxDepth, handleMakeRoot, handleCycleRecipe, handleToggleFold)
+    const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, foldedRecipes, expandedNodes, maxDepth, handleMakeRoot, handleCycleRecipe, handleToggleFold, handleToggleExpand)
     const laid = layoutNodes(raw, raw2)
     const allNodes: Node<MonsterNodeData>[] = [...laid]
     const allEdges: Edge[] = [...raw2]
@@ -411,10 +442,13 @@ export default function SynthesisViewer() {
             depth: 0,
             truncated: false,
             folded: foldedRecipes[parentKey] === true,
+            depthLimited: false,
+            expandedPast: false,
             leafCount: fullLeafCount(parent, new Set(), recipeIndices, new Map(), true),
             onMakeRoot: handleMakeRoot,
             onCycleRecipe: handleCycleRecipe,
             onToggleFold: handleToggleFold,
+            onToggleExpand: handleToggleExpand,
           },
           position: { x: parentX, y: parentY },
         })
@@ -433,10 +467,13 @@ export default function SynthesisViewer() {
             depth: 0,
             truncated: (siblingRecipes.length > 0),
             folded: foldedRecipes[siblingKey] === true,
+            depthLimited: false,
+            expandedPast: false,
             leafCount: fullLeafCount(siblingName, new Set(), recipeIndices, new Map(), false),
             onMakeRoot: handleMakeRoot,
             onCycleRecipe: handleCycleRecipe,
             onToggleFold: handleToggleFold,
+            onToggleExpand: handleToggleExpand,
           },
           position: { x: siblingX, y: 0 },
         })
@@ -498,7 +535,7 @@ export default function SynthesisViewer() {
     } else {
       pendingViewport.current = vp
     }
-  }, [root, recipeIndices, foldedRecipes, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, handleToggleFold, setNodes, setEdges])
+  }, [root, recipeIndices, foldedRecipes, expandedNodes, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, handleToggleFold, handleToggleExpand, setNodes, setEdges])
 
   return (
     <div className="flex flex-col gap-4 relative">
