@@ -28,6 +28,7 @@ export interface MonsterNodeData extends Record<string, unknown> {
   leafCount: number
   truncated: boolean
   folded: boolean
+  phase?: 'exiting'
   onMakeRoot: (name: string) => void
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void
   onToggleFold: (name: string) => void
@@ -41,7 +42,7 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
   const canToggleFold = data.recipeCount > 0 && (data.folded || !data.truncated)
 
   return (
-    <div className={`group relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md px-3 py-2.5 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-white/5 w-[180px]`}>
+    <div className={`group relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md px-3 py-2.5 shadow-2xl transition-all duration-[350ms] hover:scale-[1.02] hover:border-white/30 hover:shadow-white/5 w-[180px] ${data.phase === 'exiting' ? 'opacity-0 pointer-events-none scale-95' : ''}`}>
       <style jsx>{`
         @keyframes pulse-subtle {
           0%, 100% { opacity: 1; transform: scale(1); }

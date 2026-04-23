@@ -21,10 +21,17 @@ import '@xyflow/react/dist/style.css'
 import MonsterNode, { type MonsterNodeData } from './MonsterNode'
 import MonsterSearch from './MonsterSearch'
 import { monsterByName, recipesByResult } from './_data'
-import type { Rank, MonsterType, MonsterTag } from './_data'
+import type { Rank, MonsterType } from './_data'
 
 const NODE_W = 200
 const NODE_H = 160
+const VIEW_PADDING = 24
+// Gap between the main tree's x-extent and the context sibling node
+const CTX_GAP = NODE_W * 0.75
+// Duration of the camera pan that precedes a navigation commit, and of the
+// fade used for added/removed nodes.
+const PAN_MS = 350
+const FADE_MS = 350
 
 const FlowingEdge = ({
   id,
@@ -81,39 +88,46 @@ const EDGE_TYPES = {
 }
 
 type NavEntry = { parent: string; isParent1: boolean; recipeIdx: number }
+type AlignTo = { nodeId: string; worldPos: { x: number; y: number } }
+type PendingNav = { root: string; navHistory: NavEntry[]; alignTo: AlignTo }
+type Handlers = {
+  onMakeRoot: (name: string) => void
+  onCycleRecipe: (nodeId: string, dir: 1 | -1) => void
+  onToggleFold: (name: string) => void
+}
 
 // Unbounded leaf count — monsters with no recipes are leaves.
 // Base monsters (catchable) are also treated as leaves unless they are the root.
 // Uses an ancestors set for cycle detection and a local memo.
 function fullLeafCount(
-  name: string, 
-  ancestors: Set<string>, 
+  name: string,
+  ancestors: Set<string>,
   recipeIndices: Record<string, number>,
   memo: Map<string, number>,
   isRoot: boolean = false
 ): number {
   const key = name.toLowerCase()
   if (ancestors.has(key)) return 0
-  
+
   const monster = monsterByName.get(key)
   const isBase = (monster?.tags ?? ['base']).includes('base')
-  
+
   if (isBase && !isRoot) return 1
   if (!isRoot && memo.has(key)) return memo.get(key)!
-  
+
   const recipes = recipesByResult.get(key) ?? []
   if (recipes.length === 0) {
     if (!isRoot) memo.set(key, 1)
     return 1
   }
-  
+
   ancestors.add(key)
   const idx = Math.min(recipeIndices[key] ?? 0, Math.max(0, recipes.length - 1))
   const r = recipes[idx]
-  const n = fullLeafCount(r.parent1, ancestors, recipeIndices, memo, false) + 
+  const n = fullLeafCount(r.parent1, ancestors, recipeIndices, memo, false) +
             fullLeafCount(r.parent2, ancestors, recipeIndices, memo, false)
   ancestors.delete(key)
-  
+
   if (!isRoot) memo.set(key, n)
   return n
 }
@@ -240,9 +254,159 @@ function layoutNodes(nodes: Node<MonsterNodeData>[], edges: Edge[]): Node<Monste
   }))
 }
 
-const VIEW_PADDING = 24
-// Gap between the main tree's x-extent and the context sibling node
-const CTX_GAP = NODE_W * 0.75
+// Append the context parent + sibling nodes and their edges. Pure: the resulting
+// positions are in the same coord system as `laid` (root at y=0, parent ctx at y=NODE_H).
+function injectContext(
+  laid: Node<MonsterNodeData>[],
+  edges: Edge[],
+  root: string,
+  navHistory: NavEntry[],
+  recipeIndices: Record<string, number>,
+  foldedRecipes: Record<string, boolean>,
+  handlers: Handlers,
+): { nodes: Node<MonsterNodeData>[]; edges: Edge[] } {
+  const parentEntry = navHistory.length > 0 ? navHistory[navHistory.length - 1] : null
+  if (!parentEntry) return { nodes: [...laid], edges: [...edges] }
+
+  const { parent, isParent1, recipeIdx } = parentEntry
+  const parentKey = parent.toLowerCase()
+  const parentRecipes = recipesByResult.get(parentKey) ?? []
+  const safeIdx = Math.min(recipeIdx, Math.max(0, parentRecipes.length - 1))
+  const parentRecipe = parentRecipes[safeIdx]
+  const parentMonster = monsterByName.get(parentKey)
+  const rootNode = laid.find(n => n.id === root.toLowerCase())
+
+  if (!rootNode || !parentRecipe) return { nodes: [...laid], edges: [...edges] }
+
+  const rootX = rootNode.position.x
+  const treeXs = laid.map(n => n.position.x)
+  const treeMaxX = Math.max(...treeXs)
+  const treeMinX = Math.min(...treeXs)
+
+  const siblingName = isParent1 ? parentRecipe.parent2 : parentRecipe.parent1
+  const siblingKey = siblingName.toLowerCase()
+  const siblingMonster = monsterByName.get(siblingKey)
+  const siblingRecipes = recipesByResult.get(siblingKey) ?? []
+
+  // Sibling goes outside the tree extent; parent centers between root and sibling
+  const siblingX = isParent1 ? treeMaxX + CTX_GAP : treeMinX - CTX_GAP
+  const parentX = (rootX + siblingX) / 2
+  const parentY = rootNode.position.y + NODE_H
+
+  // Scope the context ids by monster key so different parents/siblings
+  // get distinct DOM nodes and fade in/out between navigations.
+  const parentNodeId = `__ctx_parent__:${parentKey}`
+  const siblingNodeId = `__ctx_sibling__:${siblingKey}`
+
+  const memo = new Map<string, number>()
+
+  const allNodes: Node<MonsterNodeData>[] = [
+    ...laid,
+    {
+      id: parentNodeId,
+      type: 'monster',
+      data: {
+        name: parentMonster?.name ?? parent,
+        rank: (parentMonster?.rank ?? '?') as Rank,
+        type: (parentMonster?.type ?? 'material') as MonsterType,
+        tags: parentMonster?.tags ?? ['base'],
+        nodeId: parentNodeId,
+        recipeIndex: safeIdx,
+        recipeCount: 1,
+        depth: 0,
+        truncated: false,
+        folded: foldedRecipes[parentKey] === true,
+        leafCount: fullLeafCount(parent, new Set(), recipeIndices, memo, true),
+        onMakeRoot: handlers.onMakeRoot,
+        onCycleRecipe: handlers.onCycleRecipe,
+        onToggleFold: handlers.onToggleFold,
+      },
+      position: { x: parentX, y: parentY },
+    },
+    {
+      id: siblingNodeId,
+      type: 'contextSibling',
+      data: {
+        name: siblingMonster?.name ?? siblingName,
+        rank: (siblingMonster?.rank ?? '?') as Rank,
+        type: (siblingMonster?.type ?? 'material') as MonsterType,
+        tags: siblingMonster?.tags ?? ['base'],
+        nodeId: siblingNodeId,
+        recipeIndex: 0,
+        recipeCount: 1,
+        depth: 0,
+        truncated: siblingRecipes.length > 0,
+        folded: foldedRecipes[siblingKey] === true,
+        leafCount: fullLeafCount(siblingName, new Set(), recipeIndices, memo, false),
+        onMakeRoot: handlers.onMakeRoot,
+        onCycleRecipe: handlers.onCycleRecipe,
+        onToggleFold: handlers.onToggleFold,
+      },
+      position: { x: siblingX, y: rootNode.position.y },
+    },
+  ]
+
+  const allEdges: Edge[] = [
+    ...edges,
+    {
+      id: '__ctx_edge_root__',
+      source: parentNodeId,
+      target: root.toLowerCase(),
+      type: 'flowing',
+      style: { stroke: '#3f3f46' },
+    },
+    {
+      id: '__ctx_edge_sibling__',
+      source: parentNodeId,
+      target: siblingNodeId,
+      type: 'flowing',
+      style: { stroke: '#3f3f46', strokeDasharray: '6 4' },
+    },
+  ]
+
+  return { nodes: allNodes, edges: allEdges }
+}
+
+// One-shot pipeline used by both the main rebuild effect and the simulated
+// layouts that nav handlers consult mid-pan.
+function buildFullGraph(args: {
+  root: string
+  navHistory: NavEntry[]
+  recipeIndices: Record<string, number>
+  foldedRecipes: Record<string, boolean>
+  maxDepth: number
+  handlers: Handlers
+}): { nodes: Node<MonsterNodeData>[]; edges: Edge[] } {
+  const { nodes: raw, edges } = buildGraph(
+    args.root,
+    args.recipeIndices,
+    args.foldedRecipes,
+    args.maxDepth,
+    args.handlers.onMakeRoot,
+    args.handlers.onCycleRecipe,
+    args.handlers.onToggleFold,
+  )
+  const laid = layoutNodes(raw, edges)
+  return injectContext(
+    laid,
+    edges,
+    args.root,
+    args.navHistory,
+    args.recipeIndices,
+    args.foldedRecipes,
+    args.handlers,
+  )
+}
+
+// Translate every node so the one matching `alignTo.nodeId` lands at
+// `alignTo.worldPos`. No-op if the target isn't present.
+function applyAlignment(nodes: Node<MonsterNodeData>[], alignTo: AlignTo): Node<MonsterNodeData>[] {
+  const target = nodes.find(n => n.id === alignTo.nodeId)
+  if (!target) return nodes
+  const dx = alignTo.worldPos.x - target.position.x
+  const dy = alignTo.worldPos.y - target.position.y
+  return nodes.map(n => ({ ...n, position: { x: n.position.x + dx, y: n.position.y + dy } }))
+}
 
 export default function SynthesisViewer() {
   const [root, setRoot] = useState<string | null>(null)
@@ -275,63 +439,242 @@ export default function SynthesisViewer() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rfInstance = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const lastRoot = useRef<string | null>(null)
   const pendingViewport = useRef<{ x: number; y: number; zoom: number } | null>(null)
 
+  // Transition orchestration.
+  // - panTimeoutRef: setTimeout that commits a pending navigation after the pan.
+  // - exitTimeoutRef: setTimeout that drops exiting ghost nodes after the fade.
+  // - pendingNavRef: an in-flight nav (root/navHistory/alignTo) whose commit is delayed for the pan.
+  // - alignToRef: one-shot instruction to translate the next rebuild so a chosen node lands at a chosen world position.
+  // - resetViewportRef: one-shot flag to run the default-viewport formula (search / make-root / initial).
+  // - prevNodesRef: last committed set of non-exiting nodes, for diff-based exit fades.
+  const panTimeoutRef = useRef<number | null>(null)
+  const exitTimeoutRef = useRef<number | null>(null)
+  const pendingNavRef = useRef<PendingNav | null>(null)
+  const alignToRef = useRef<AlignTo | null>(null)
+  const resetViewportRef = useRef<boolean>(true)
+  const prevNodesRef = useRef<Node<MonsterNodeData>[]>([])
+
+  // Mirror state into refs so nav handlers can read current values without being
+  // re-memoized on every change. The handlers also write back to these refs at
+  // call time, so rapid successive presses see consistent state even before
+  // React has rendered the previous change.
+  const nodesRef = useRef(nodes)
+  const rootRef = useRef(root)
+  const navHistoryRef = useRef(navHistory)
+  const recipeIndicesRef = useRef(recipeIndices)
+  const foldedRecipesRef = useRef(foldedRecipes)
+  const maxDepthRef = useRef(maxDepth)
+  useEffect(() => { nodesRef.current = nodes }, [nodes])
+  useEffect(() => { rootRef.current = root }, [root])
+  useEffect(() => { navHistoryRef.current = navHistory }, [navHistory])
+  useEffect(() => { recipeIndicesRef.current = recipeIndices }, [recipeIndices])
+  useEffect(() => { foldedRecipesRef.current = foldedRecipes }, [foldedRecipes])
+  useEffect(() => { maxDepthRef.current = maxDepth }, [maxDepth])
+
+  const cancelPendingNav = useCallback(() => {
+    if (panTimeoutRef.current !== null) {
+      clearTimeout(panTimeoutRef.current)
+      panTimeoutRef.current = null
+    }
+    pendingNavRef.current = null
+  }, [])
+
   const handleMakeRoot = useCallback((name: string) => {
+    cancelPendingNav()
+    alignToRef.current = null
+    resetViewportRef.current = true
+    rootRef.current = name
+    navHistoryRef.current = []
     setRoot(name)
     setNavHistory([])
-  }, [])
+  }, [cancelPendingNav])
 
   const handleSelect = useCallback((name: string) => {
+    cancelPendingNav()
+    alignToRef.current = null
+    resetViewportRef.current = true
+    rootRef.current = name
+    navHistoryRef.current = []
     setRoot(name)
     setNavHistory([])
-  }, [])
+  }, [cancelPendingNav])
 
   const handleCycleRecipe = useCallback((nodeId: string, dir: 1 | -1) => {
-    setRecipeIndices(prev => {
-      const key = nodeId.split(':').at(-1)!
-      const recipes = recipesByResult.get(key) ?? []
-      if (recipes.length < 2) return prev
-      const cur = prev[key] ?? 0
-      const next = {
-        ...prev,
-        [key]: (cur + dir + recipes.length) % recipes.length
-      }
-      return next
-    })
-  }, [])
-
-  const navigateToChild = useCallback((dir: 'left' | 'right') => {
-    if (!root) return
-    const key = root.toLowerCase()
+    cancelPendingNav()
+    const key = nodeId.split(':').at(-1)!
     const recipes = recipesByResult.get(key) ?? []
-    const idx = recipeIndices[key] ?? 0
-    const recipe = recipes[idx]
-    if (!recipe) return
-    const target = dir === 'left' ? recipe.parent1 : recipe.parent2
-    setNavHistory(h => [...h, { parent: root, isParent1: dir === 'left', recipeIdx: idx }])
-    setRoot(target)
-  }, [root, recipeIndices])
+    if (recipes.length < 2) return
 
-  const navigateBack = useCallback(() => {
-    if (navHistory.length === 0) return
-    const prev = navHistory[navHistory.length - 1]
-    setNavHistory(h => h.slice(0, -1))
-    setRoot(prev.parent)
-  }, [navHistory])
+    // Align the node whose recipe just changed to its current position so the
+    // swap pivots around it instead of letting the rest of the tree reflow
+    // across the screen.
+    const focal = nodesRef.current.find(n => n.id === nodeId && n.data.phase !== 'exiting')
+    if (focal) {
+      alignToRef.current = { nodeId, worldPos: focal.position }
+    }
+
+    const prev = recipeIndicesRef.current
+    const cur = prev[key] ?? 0
+    const next = { ...prev, [key]: (cur + dir + recipes.length) % recipes.length }
+    recipeIndicesRef.current = next
+    setRecipeIndices(next)
+  }, [cancelPendingNav])
 
   const handleToggleFold = useCallback((name: string) => {
+    cancelPendingNav()
     const key = name.toLowerCase()
     const recipes = recipesByResult.get(key) ?? []
     if (recipes.length === 0) return
-    setFoldedRecipes(prev => {
-      const next = { ...prev }
-      if (next[key]) delete next[key]
-      else next[key] = true
+
+    // fold is keyed by monster name — find a rendered instance (root first,
+    // else the first descendant) to use as the alignment anchor.
+    const current = nodesRef.current.filter(n => n.data.phase !== 'exiting')
+    const rootKey = rootRef.current?.toLowerCase() ?? null
+    let focal: Node<MonsterNodeData> | undefined
+    if (rootKey === key) {
+      focal = current.find(n => n.id === key)
+    } else {
+      focal = current.find(n => n.id.split(':').at(-1) === key)
+    }
+    if (focal) {
+      alignToRef.current = { nodeId: focal.id, worldPos: focal.position }
+    }
+
+    const prev = foldedRecipesRef.current
+    const nextMap = { ...prev }
+    if (nextMap[key]) delete nextMap[key]
+    else nextMap[key] = true
+    foldedRecipesRef.current = nextMap
+    setFoldedRecipes(nextMap)
+  }, [cancelPendingNav])
+
+  const changeMaxDepth = useCallback((delta: 1 | -1) => {
+    cancelPendingNav()
+    const rootKey = rootRef.current?.toLowerCase()
+    if (rootKey) {
+      const focal = nodesRef.current.find(n => n.id === rootKey && n.data.phase !== 'exiting')
+      if (focal) {
+        alignToRef.current = { nodeId: rootKey, worldPos: focal.position }
+      }
+    }
+    setMaxDepth(d => {
+      const next = Math.max(1, Math.min(8, d + delta))
+      maxDepthRef.current = next
       return next
     })
+  }, [cancelPendingNav])
+
+  // The "effective" tree a nav handler reasons about: if a prior pending nav
+  // is still panning, simulate its post-commit layout (deterministic via
+  // buildFullGraph + applyAlignment). Otherwise use the currently rendered
+  // nodes (minus any exiting ghosts).
+  const effectiveTree = useCallback((): { nodes: Node<MonsterNodeData>[]; root: string; navHistory: NavEntry[] } | null => {
+    const handlers: Handlers = {
+      onMakeRoot: handleMakeRoot,
+      onCycleRecipe: handleCycleRecipe,
+      onToggleFold: handleToggleFold,
+    }
+    if (pendingNavRef.current) {
+      const p = pendingNavRef.current
+      const built = buildFullGraph({
+        root: p.root,
+        navHistory: p.navHistory,
+        recipeIndices: recipeIndicesRef.current,
+        foldedRecipes: foldedRecipesRef.current,
+        maxDepth: maxDepthRef.current,
+        handlers,
+      }).nodes
+      return { nodes: applyAlignment(built, p.alignTo), root: p.root, navHistory: p.navHistory }
+    }
+    if (!rootRef.current) return null
+    return {
+      nodes: nodesRef.current.filter(n => n.data.phase !== 'exiting'),
+      root: rootRef.current,
+      navHistory: navHistoryRef.current,
+    }
+  }, [handleMakeRoot, handleCycleRecipe, handleToggleFold])
+
+  const startPan = useCallback((focalPos: { x: number; y: number }, postNavHasParent: boolean) => {
+    const rf = rfInstance.current
+    const container = containerRef.current
+    if (!rf || !container) return
+    const { width, height } = container.getBoundingClientRect()
+    const zoom = rf.getViewport().zoom || 1
+    // After the commit, the new root will sit at focalPos; the tree's visual
+    // bottom will be NODE_H below that (no parent ctx) or 2*NODE_H below
+    // (parent ctx also rendered). Place that bottom at the usual padded
+    // screen bottom so the landing spot looks identical to a cold default.
+    const bottomOffset = postNavHasParent ? 2 * NODE_H : NODE_H
+    const target = {
+      x: width / 2 - (focalPos.x + NODE_W / 2) * zoom,
+      y: height - VIEW_PADDING - (focalPos.y + bottomOffset) * zoom,
+      zoom,
+    }
+    rf.setViewport(target, { duration: PAN_MS })
   }, [])
+
+  const scheduleCommit = useCallback(() => {
+    if (panTimeoutRef.current !== null) clearTimeout(panTimeoutRef.current)
+    panTimeoutRef.current = window.setTimeout(() => {
+      const p = pendingNavRef.current
+      if (!p) return
+      pendingNavRef.current = null
+      panTimeoutRef.current = null
+      alignToRef.current = p.alignTo
+      // Sync refs alongside setState so a follow-up handler in the same tick
+      // (before React renders) reads consistent values.
+      rootRef.current = p.root
+      navHistoryRef.current = p.navHistory
+      setRoot(p.root)
+      setNavHistory(p.navHistory)
+    }, PAN_MS)
+  }, [])
+
+  const navigateToChild = useCallback((dir: 'left' | 'right') => {
+    const eff = effectiveTree()
+    if (!eff) return
+    const rootKey = eff.root.toLowerCase()
+    const recipes = recipesByResult.get(rootKey) ?? []
+    const idx = recipeIndicesRef.current[rootKey] ?? 0
+    const recipe = recipes[idx]
+    if (!recipe) return
+    const targetName = dir === 'left' ? recipe.parent1 : recipe.parent2
+    const targetKey = targetName.toLowerCase()
+    const focalId = `${rootKey}>${dir === 'left' ? 'p1' : 'p2'}:${targetKey}`
+    const focal = eff.nodes.find(n => n.id === focalId)
+    if (!focal) return
+
+    const nextHistory: NavEntry[] = [
+      ...eff.navHistory,
+      { parent: eff.root, isParent1: dir === 'left', recipeIdx: idx },
+    ]
+    pendingNavRef.current = {
+      root: targetName,
+      navHistory: nextHistory,
+      alignTo: { nodeId: targetKey, worldPos: focal.position },
+    }
+    startPan(focal.position, nextHistory.length > 0)
+    scheduleCommit()
+  }, [effectiveTree, startPan, scheduleCommit])
+
+  const navigateBack = useCallback(() => {
+    const eff = effectiveTree()
+    if (!eff || eff.navHistory.length === 0) return
+    const prev = eff.navHistory[eff.navHistory.length - 1]
+    const focal = eff.nodes.find(n => n.id.startsWith('__ctx_parent__'))
+    if (!focal) return
+
+    const nextHistory = eff.navHistory.slice(0, -1)
+    const targetKey = prev.parent.toLowerCase()
+    pendingNavRef.current = {
+      root: prev.parent,
+      navHistory: nextHistory,
+      alignTo: { nodeId: targetKey, worldPos: focal.position },
+    }
+    startPan(focal.position, nextHistory.length > 0)
+    scheduleCommit()
+  }, [effectiveTree, startPan, scheduleCommit])
 
   useEffect(() => {
     if (Object.keys(recipeIndices).length > 0) {
@@ -352,151 +695,81 @@ export default function SynthesisViewer() {
       if (e.key === 'ArrowLeft')  { e.preventDefault(); navigateToChild('left') }
       if (e.key === 'ArrowRight') { e.preventDefault(); navigateToChild('right') }
       if (e.key === 'ArrowDown')  { e.preventDefault(); navigateBack() }
-      if (e.key === 'ArrowUp')    { e.preventDefault(); if (root) handleToggleFold(root) }
+      if (e.key === 'ArrowUp')    { e.preventDefault(); if (rootRef.current) handleToggleFold(rootRef.current) }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [navigateToChild, navigateBack, handleToggleFold, root])
+  }, [navigateToChild, navigateBack, handleToggleFold])
+
+  useEffect(() => {
+    return () => {
+      if (panTimeoutRef.current !== null) clearTimeout(panTimeoutRef.current)
+      if (exitTimeoutRef.current !== null) clearTimeout(exitTimeoutRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (!root) return
-    const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, foldedRecipes, maxDepth, handleMakeRoot, handleCycleRecipe, handleToggleFold)
-    const laid = layoutNodes(raw, raw2)
-    const allNodes: Node<MonsterNodeData>[] = [...laid]
-    const allEdges: Edge[] = [...raw2]
+    const handlers: Handlers = {
+      onMakeRoot: handleMakeRoot,
+      onCycleRecipe: handleCycleRecipe,
+      onToggleFold: handleToggleFold,
+    }
+    const built = buildFullGraph({ root, navHistory, recipeIndices, foldedRecipes, maxDepth, handlers })
 
-    // Inject parent + sibling context nodes when we've navigated into a child
-    const parentEntry = navHistory.length > 0 ? navHistory[navHistory.length - 1] : null
-    if (parentEntry) {
-      const { parent, isParent1, recipeIdx } = parentEntry
-      const parentKey = parent.toLowerCase()
-      const parentRecipes = recipesByResult.get(parentKey) ?? []
-      const safeIdx = Math.min(recipeIdx, Math.max(0, parentRecipes.length - 1))
-      const parentRecipe = parentRecipes[safeIdx]
-      const parentMonster = monsterByName.get(parentKey)
+    let aligned = built.nodes
+    if (alignToRef.current) {
+      aligned = applyAlignment(built.nodes, alignToRef.current)
+      alignToRef.current = null
+    }
 
-      const rootNode = laid.find(n => n.id === root.toLowerCase())
-      if (rootNode && parentRecipe) {
-        const rootX = rootNode.position.x
-        const treeXs = laid.map(n => n.position.x)
-        const treeMaxX = Math.max(...treeXs)
-        const treeMinX = Math.min(...treeXs)
+    // Ghost-nodes for fade-out: any previously committed node whose id is not
+    // in the new set gets re-included with phase='exiting' so CSS can fade it
+    // to opacity 0 over FADE_MS, then a timeout drops it.
+    const prevCommitted = prevNodesRef.current
+    const newIds = new Set(aligned.map(n => n.id))
+    const exiting: Node<MonsterNodeData>[] = prevCommitted
+      .filter(n => !newIds.has(n.id))
+      .map(n => ({ ...n, data: { ...n.data, phase: 'exiting' as const } }))
 
-        const siblingName = isParent1 ? parentRecipe.parent2 : parentRecipe.parent1
-        const siblingKey = siblingName.toLowerCase()
-        const siblingMonster = monsterByName.get(siblingKey)
-        const siblingRecipes = recipesByResult.get(siblingKey) ?? []
+    prevNodesRef.current = aligned
 
-        // Sibling goes outside the tree extent; parent centers between root and sibling
-        const siblingX = isParent1
-          ? treeMaxX + CTX_GAP
-          : treeMinX - CTX_GAP
-        const parentX = (rootX + siblingX) / 2
-        const parentY = NODE_H  // one level below root (root is at y=0)
+    setNodes([...aligned, ...exiting])
+    setEdges(built.edges)
 
-        const parentNodeId = '__ctx_parent__'
-        const siblingNodeId = '__ctx_sibling__'
+    if (exitTimeoutRef.current !== null) clearTimeout(exitTimeoutRef.current)
+    if (exiting.length > 0) {
+      exitTimeoutRef.current = window.setTimeout(() => {
+        setNodes(curr => curr.filter(n => n.data.phase !== 'exiting'))
+        exitTimeoutRef.current = null
+      }, FADE_MS)
+    }
 
-        allNodes.push({
-          id: parentNodeId,
-          type: 'monster',
-          data: {
-            name: parentMonster?.name ?? parent,
-            rank: (parentMonster?.rank ?? '?') as Rank,
-            type: (parentMonster?.type ?? 'material') as MonsterType,
-            tags: parentMonster?.tags ?? ['base'],
-            nodeId: parentNodeId,
-            recipeIndex: safeIdx,
-            recipeCount: 1,
-            depth: 0,
-            truncated: false,
-            folded: foldedRecipes[parentKey] === true,
-            leafCount: fullLeafCount(parent, new Set(), recipeIndices, new Map(), true),
-            onMakeRoot: handleMakeRoot,
-            onCycleRecipe: handleCycleRecipe,
-            onToggleFold: handleToggleFold,
-          },
-          position: { x: parentX, y: parentY },
-        })
-
-        allNodes.push({
-          id: siblingNodeId,
-          type: 'contextSibling',
-          data: {
-            name: siblingMonster?.name ?? siblingName,
-            rank: (siblingMonster?.rank ?? '?') as Rank,
-            type: (siblingMonster?.type ?? 'material') as MonsterType,
-            tags: siblingMonster?.tags ?? ['base'],
-            nodeId: siblingNodeId,
-            recipeIndex: 0,
-            recipeCount: 1,
-            depth: 0,
-            truncated: (siblingRecipes.length > 0),
-            folded: foldedRecipes[siblingKey] === true,
-            leafCount: fullLeafCount(siblingName, new Set(), recipeIndices, new Map(), false),
-            onMakeRoot: handleMakeRoot,
-            onCycleRecipe: handleCycleRecipe,
-            onToggleFold: handleToggleFold,
-          },
-          position: { x: siblingX, y: 0 },
-        })
-
-        // Solid edge: parent → current root (the synthesis connection we came from)
-        allEdges.push({
-          id: '__ctx_edge_root__',
-          source: parentNodeId,
-          target: root.toLowerCase(),
-          type: 'flowing',
-          style: { stroke: '#3f3f46' },
-        })
-
-        // Dashed edge: parent → sibling (the other synthesis ingredient, not yet explored)
-        allEdges.push({
-          id: '__ctx_edge_sibling__',
-          source: parentNodeId,
-          target: siblingNodeId,
-          type: 'flowing',
-          style: { stroke: '#3f3f46', strokeDasharray: '6 4' },
-        })
+    // Viewport. For navigation/fold/cycle the camera is already where it
+    // should be (pan ended on the focal; alignment pinned the focal there).
+    // Only reset on a true change of context: search, make-root, or initial.
+    if (resetViewportRef.current) {
+      resetViewportRef.current = false
+      const container = containerRef.current
+      if (!container) return
+      const rootNode = aligned.find(n => n.id === root.toLowerCase())
+      if (!rootNode) return
+      const { width, height } = container.getBoundingClientRect()
+      const levelsToShow = 5
+      const defaultZoom = Math.min(1, (height - VIEW_PADDING * 2) / (levelsToShow * NODE_H))
+      const hasParent = navHistory.length > 0
+      const bottomY = hasParent ? 2 * NODE_H : NODE_H
+      const vp = {
+        x: width / 2 - (rootNode.position.x + NODE_W / 2) * defaultZoom,
+        y: height - bottomY * defaultZoom - VIEW_PADDING,
+        zoom: defaultZoom,
       }
-    }
-
-    setNodes(allNodes)
-    setEdges(allEdges)
-
-    const container = containerRef.current
-    if (!container) return
-    const rootNode = laid.find(n => n.id === root.toLowerCase())
-    if (!rootNode) return
-    const { width, height } = container.getBoundingClientRect()
-    const rf = rfInstance.current
-
-    // Zoom out enough to show ~5 levels (Parent + Child + 3 levels of depth)
-    // Vertical span of 5 nodes: 5 * NODE_H
-    const levelsToShow = 5
-    const defaultZoom = Math.min(1, (height - VIEW_PADDING * 2) / (levelsToShow * NODE_H))
-
-    // Only reset zoom if root changed (initial load or navigation)
-    // Otherwise keep current zoom (e.g. recipe cycle)
-    const isNewRoot = lastRoot.current !== root
-    const currentZoom = rf ? (rf.getViewport().zoom || 1) : 1
-    const zoom = isNewRoot ? defaultZoom : currentZoom
-    lastRoot.current = root
-
-    // Parent context is at y=NODE_H, its bottom is at 2*NODE_H
-    // If no parent, root (y=0) is the bottom, so bottom is at NODE_H
-    const hasParent = navHistory.length > 0
-    const bottomY = hasParent ? 2 * NODE_H : NODE_H
-
-    const vp = {
-      x: width / 2 - (rootNode.position.x + NODE_W / 2) * zoom,
-      y: height - bottomY * zoom - VIEW_PADDING,
-      zoom,
-    }
-    if (rf) {
-      rf.setViewport(vp, { duration: 300 })
-    } else {
-      pendingViewport.current = vp
+      const rf = rfInstance.current
+      if (rf) {
+        rf.setViewport(vp, { duration: 300 })
+      } else {
+        pendingViewport.current = vp
+      }
     }
   }, [root, recipeIndices, foldedRecipes, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, handleToggleFold, setNodes, setEdges])
 
@@ -509,6 +782,13 @@ export default function SynthesisViewer() {
         }
         .animate-flow {
           animation: flow 10s linear infinite;
+        }
+        @keyframes dq-node-appear {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .react-flow__node {
+          animation: dq-node-appear ${FADE_MS}ms ease-out;
         }
         .react-flow__controls {
           box-shadow: none !important;
@@ -534,7 +814,7 @@ export default function SynthesisViewer() {
               <div className="pointer-events-auto">
                 <MonsterSearch onSelect={handleSelect} />
               </div>
-              
+
               <div className="pointer-events-auto flex flex-col gap-1">
                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Viewer Controls</span>
                 <div className="flex items-center gap-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl p-2 px-3 self-start shadow-xl">
@@ -542,19 +822,19 @@ export default function SynthesisViewer() {
                     <span className="text-xs font-medium text-zinc-400">Depth</span>
                     <div className="flex items-center bg-zinc-800 rounded-lg p-0.5">
                       <button
-                        onClick={() => setMaxDepth(d => Math.max(1, d - 1))}
+                        onClick={() => changeMaxDepth(-1)}
                         className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-zinc-700 transition-colors text-zinc-300 text-xs"
                       >−</button>
                       <span className="text-xs font-bold text-zinc-100 w-6 text-center">{maxDepth}</span>
                       <button
-                        onClick={() => setMaxDepth(d => Math.min(8, d + 1))}
+                        onClick={() => changeMaxDepth(1)}
                         className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-zinc-700 transition-colors text-zinc-300 text-xs"
                       >+</button>
                     </div>
                   </div>
                   <div className="w-[1px] h-4 bg-white/10" />
                   <div className="text-[10px] text-zinc-500 font-medium">
-                    {nodes.filter(n => n.type === 'monster').length} monsters
+                    {nodes.filter(n => n.type === 'monster' && n.data.phase !== 'exiting').length} monsters
                   </div>
                 </div>
               </div>
@@ -562,8 +842,8 @@ export default function SynthesisViewer() {
 
             {navHistory.length > 0 && (
               <div className="absolute bottom-6 left-6 z-10 pointer-events-auto">
-                 <button 
-                  onClick={navigateBack} 
+                 <button
+                  onClick={navigateBack}
                   className="group flex items-center gap-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-2 px-4 transition-all shadow-xl"
                 >
                   <svg className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -610,11 +890,11 @@ export default function SynthesisViewer() {
               proOptions={{ hideAttribution: true }}
             >
               <Background
-                variant={BackgroundVariant.Dots} 
-                gap={24} 
-                size={1} 
-                color="#27272a" 
-                style={{ backgroundColor: '#09090b' }} 
+                variant={BackgroundVariant.Dots}
+                gap={24}
+                size={1}
+                color="#27272a"
+                style={{ backgroundColor: '#09090b' }}
               />
               <Controls position="bottom-right" showInteractive={false} />
             </ReactFlow>
