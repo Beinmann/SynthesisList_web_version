@@ -27,12 +27,18 @@ export interface MonsterNodeData extends Record<string, unknown> {
   depth: number
   leafCount: number
   truncated: boolean
+  folded: boolean
   onMakeRoot: (name: string) => void
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void
+  onToggleFold: (name: string) => void
 }
 
 export default function MonsterNode({ data }: { data: MonsterNodeData }) {
   const rankCls = rankColors[data.rank] ?? 'from-zinc-600 to-zinc-500 text-white'
+  // Show fold button only when a toggle would actually change the view:
+  // expanded (not truncated) → can fold; folded → can unfold.
+  // Hide on depth-cap / base-stop truncation where toggling fold wouldn't help.
+  const canToggleFold = data.recipeCount > 0 && (data.folded || !data.truncated)
 
   return (
     <div className={`group relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md px-3 py-2.5 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-white/5 w-[180px]`}>
@@ -99,9 +105,28 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
         </div>
       </div>
 
-      <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
         <div className="text-[8px] text-zinc-700 font-mono">d{data.depth}</div>
       </div>
+
+      {canToggleFold && (
+        <button
+          onClick={e => { e.stopPropagation(); data.onToggleFold(data.name) }}
+          title={data.folded ? 'Unfold recipe' : 'Fold recipe (↑)'}
+          className={`nodrag absolute -top-2 -right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all
+            ${data.folded
+              ? 'bg-amber-500/90 border-amber-300/50 text-amber-50 hover:bg-amber-400'
+              : 'bg-zinc-900/95 border-white/20 text-zinc-300 hover:text-white hover:border-white/40'}`}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {data.folded ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
+            )}
+          </svg>
+        </button>
+      )}
 
       <Handle type="source" position={Position.Top} className="!w-2 !h-2 !bg-zinc-500 !border-none !transition-colors group-hover:!bg-white" />
 

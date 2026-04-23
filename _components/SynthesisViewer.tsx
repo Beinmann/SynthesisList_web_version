@@ -125,6 +125,7 @@ function buildGraph(
   maxDepth: number,
   onMakeRoot: (name: string) => void,
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void,
+  onToggleFold: (name: string) => void,
 ) {
   const leafMemo = new Map<string, number>()
   const nodes: Node<MonsterNodeData>[] = []
@@ -162,9 +163,11 @@ function buildGraph(
           recipeCount: recipes.length,
           depth,
           truncated: (depth === maxDepth || stopAtBase || isFolded) && recipes.length > 0,
+          folded: isFolded,
           leafCount: fullLeafCount(name, new Set(), recipeIndices, leafMemo, isRoot),
           onMakeRoot,
           onCycleRecipe,
+          onToggleFold,
         },
         position: { x: 0, y: 0 },
       })
@@ -318,9 +321,8 @@ export default function SynthesisViewer() {
     setRoot(prev.parent)
   }, [navHistory])
 
-  const toggleFoldRoot = useCallback(() => {
-    if (!root) return
-    const key = root.toLowerCase()
+  const handleToggleFold = useCallback((name: string) => {
+    const key = name.toLowerCase()
     const recipes = recipesByResult.get(key) ?? []
     if (recipes.length === 0) return
     setFoldedRecipes(prev => {
@@ -329,7 +331,7 @@ export default function SynthesisViewer() {
       else next[key] = true
       return next
     })
-  }, [root])
+  }, [])
 
   useEffect(() => {
     if (Object.keys(recipeIndices).length > 0) {
@@ -350,15 +352,15 @@ export default function SynthesisViewer() {
       if (e.key === 'ArrowLeft')  { e.preventDefault(); navigateToChild('left') }
       if (e.key === 'ArrowRight') { e.preventDefault(); navigateToChild('right') }
       if (e.key === 'ArrowDown')  { e.preventDefault(); navigateBack() }
-      if (e.key === 'ArrowUp')    { e.preventDefault(); toggleFoldRoot() }
+      if (e.key === 'ArrowUp')    { e.preventDefault(); if (root) handleToggleFold(root) }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [navigateToChild, navigateBack, toggleFoldRoot])
+  }, [navigateToChild, navigateBack, handleToggleFold, root])
 
   useEffect(() => {
     if (!root) return
-    const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, foldedRecipes, maxDepth, handleMakeRoot, handleCycleRecipe)
+    const { nodes: raw, edges: raw2 } = buildGraph(root, recipeIndices, foldedRecipes, maxDepth, handleMakeRoot, handleCycleRecipe, handleToggleFold)
     const laid = layoutNodes(raw, raw2)
     const allNodes: Node<MonsterNodeData>[] = [...laid]
     const allEdges: Edge[] = [...raw2]
@@ -408,9 +410,11 @@ export default function SynthesisViewer() {
             recipeCount: 1,
             depth: 0,
             truncated: false,
+            folded: foldedRecipes[parentKey] === true,
             leafCount: fullLeafCount(parent, new Set(), recipeIndices, new Map(), true),
             onMakeRoot: handleMakeRoot,
             onCycleRecipe: handleCycleRecipe,
+            onToggleFold: handleToggleFold,
           },
           position: { x: parentX, y: parentY },
         })
@@ -428,9 +432,11 @@ export default function SynthesisViewer() {
             recipeCount: 1,
             depth: 0,
             truncated: (siblingRecipes.length > 0),
+            folded: foldedRecipes[siblingKey] === true,
             leafCount: fullLeafCount(siblingName, new Set(), recipeIndices, new Map(), false),
             onMakeRoot: handleMakeRoot,
             onCycleRecipe: handleCycleRecipe,
+            onToggleFold: handleToggleFold,
           },
           position: { x: siblingX, y: 0 },
         })
@@ -492,7 +498,7 @@ export default function SynthesisViewer() {
     } else {
       pendingViewport.current = vp
     }
-  }, [root, recipeIndices, foldedRecipes, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, setNodes, setEdges])
+  }, [root, recipeIndices, foldedRecipes, maxDepth, navHistory, handleMakeRoot, handleCycleRecipe, handleToggleFold, setNodes, setEdges])
 
   return (
     <div className="flex flex-col gap-4 relative">
