@@ -29,6 +29,10 @@ export interface MonsterNodeData extends Record<string, unknown> {
   truncated: boolean
   folded: boolean
   phase?: 'exiting'
+  // Rendered as context (parent/sibling of the current focus) — dimmed, and
+  // the fold + recipe-cycle buttons are hidden since they would silently
+  // mutate state for a node that isn't actually expanded in the tree.
+  isContext?: boolean
   onMakeRoot: (name: string) => void
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void
   onToggleFold: (name: string) => void
@@ -39,10 +43,14 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
   // Show fold button only when a toggle would actually change the view:
   // expanded (not truncated) → can fold; folded → can unfold.
   // Hide on depth-cap / base-stop truncation where toggling fold wouldn't help.
-  const canToggleFold = data.recipeCount > 0 && (data.folded || !data.truncated)
+  // Context nodes suppress the button: the sibling isn't really expanded, so
+  // folding it wouldn't change anything visible here.
+  const canToggleFold = data.recipeCount > 0 && (data.folded || !data.truncated) && !data.isContext
+  const showRecipeCycler = data.recipeCount > 1 && !data.isContext
+  const ctxCls = data.isContext ? 'opacity-60 hover:opacity-100' : ''
 
   return (
-    <div className={`group relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md px-3 py-2.5 shadow-2xl transition-all duration-[350ms] hover:scale-[1.02] hover:border-white/30 hover:shadow-white/5 w-[180px] ${data.phase === 'exiting' ? 'opacity-0 pointer-events-none scale-95' : ''}`}>
+    <div className={`group relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md px-3 py-2.5 shadow-2xl transition-all duration-[350ms] hover:scale-[1.02] hover:border-white/30 hover:shadow-white/5 w-[180px] ${ctxCls} ${data.phase === 'exiting' ? 'opacity-0 pointer-events-none scale-95' : ''}`}>
       <style jsx>{`
         @keyframes pulse-subtle {
           0%, 100% { opacity: 1; transform: scale(1); }
@@ -132,7 +140,7 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
       <Handle type="source" position={Position.Top} className="!w-2 !h-2 !bg-zinc-500 !border-none !transition-colors group-hover:!bg-white" />
 
       {/* Recipe cycler — floats outside card so it doesn't affect the node's layout box */}
-      {data.recipeCount > 1 && (
+      {showRecipeCycler && (
         <div className="nodrag absolute left-1/2 top-full -translate-x-1/2 mt-1.5 z-20">
           <div className="flex items-center bg-zinc-900/95 backdrop-blur-md rounded-full border border-white/20 shadow-2xl shadow-black/60 overflow-hidden">
             <button

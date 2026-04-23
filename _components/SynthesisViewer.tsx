@@ -5,8 +5,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  Handle,
-  Position,
   useNodesState,
   useEdgesState,
   BaseEdge,
@@ -26,8 +24,6 @@ import type { Rank, MonsterType } from './_data'
 const NODE_W = 200
 const NODE_H = 160
 const VIEW_PADDING = 24
-// Gap between the main tree's x-extent and the context sibling node
-const CTX_GAP = NODE_W * 0.75
 // Duration of the camera pan that precedes a navigation commit, and of the
 // fade used for added/removed nodes.
 const PAN_MS = 350
@@ -72,15 +68,8 @@ const FlowingEdge = ({
   )
 }
 
-const ContextSiblingNode = () => (
-  <div style={{ width: NODE_W, height: 1 }}>
-    <Handle type="target" position={Position.Bottom} style={{ visibility: 'hidden' }} />
-  </div>
-)
-
 const NODE_TYPES = {
   monster: MonsterNode,
-  contextSibling: ContextSiblingNode,
 }
 
 const EDGE_TYPES = {
@@ -291,8 +280,12 @@ function injectContext(
   const siblingMonster = monsterByName.get(siblingKey)
   const siblingRecipes = recipesByResult.get(siblingKey) ?? []
 
-  // Sibling goes outside the tree extent; parent centers between root and sibling
-  const siblingX = isParent1 ? treeMaxX + CTX_GAP : treeMinX - CTX_GAP
+  // Sibling sits one layout slot outside the tree's leaf extent — matches the
+  // spacing layoutNodes would produce if the parent were laid out as root with
+  // the sibling as an un-expanded leaf. Parent then centers between its two
+  // immediate children (root-subtree root and sibling), which is the same
+  // midpoint formula layoutNodes uses.
+  const siblingX = isParent1 ? treeMaxX + NODE_W : treeMinX - NODE_W
   const parentX = (rootX + siblingX) / 2
   const parentY = rootNode.position.y + NODE_H
 
@@ -328,7 +321,7 @@ function injectContext(
     },
     {
       id: siblingNodeId,
-      type: 'contextSibling',
+      type: 'monster',
       data: {
         name: siblingMonster?.name ?? siblingName,
         rank: (siblingMonster?.rank ?? '?') as Rank,
@@ -336,10 +329,11 @@ function injectContext(
         tags: siblingMonster?.tags ?? ['base'],
         nodeId: siblingNodeId,
         recipeIndex: 0,
-        recipeCount: 1,
+        recipeCount: siblingRecipes.length,
         depth: 0,
         truncated: siblingRecipes.length > 0,
         folded: foldedRecipes[siblingKey] === true,
+        isContext: true,
         leafCount: fullLeafCount(siblingName, new Set(), recipeIndices, memo, false),
         onMakeRoot: handlers.onMakeRoot,
         onCycleRecipe: handlers.onCycleRecipe,
@@ -836,7 +830,7 @@ export default function SynthesisViewer() {
                   </div>
                   <div className="w-[1px] h-4 bg-white/10" />
                   <div className="text-[10px] text-zinc-500 font-medium">
-                    {nodes.filter(n => n.type === 'monster' && n.data.phase !== 'exiting').length} monsters
+                    {nodes.filter(n => n.type === 'monster' && n.data.phase !== 'exiting' && !n.data.isContext).length} monsters
                   </div>
                 </div>
               </div>
