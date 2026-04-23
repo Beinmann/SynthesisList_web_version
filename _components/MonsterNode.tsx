@@ -28,51 +28,17 @@ export interface MonsterNodeData extends Record<string, unknown> {
   leafCount: number
   truncated: boolean
   folded: boolean
-  depthLimited: boolean
-  expandedPast: boolean
   onMakeRoot: (name: string) => void
   onCycleRecipe: (nodeId: string, dir: 1 | -1) => void
   onToggleFold: (name: string) => void
-  onToggleExpand: (nodeId: string) => void
 }
 
 export default function MonsterNode({ data }: { data: MonsterNodeData }) {
   const rankCls = rankColors[data.rank] ?? 'from-zinc-600 to-zinc-500 text-white'
-
-  // The subtree-visibility toggle has four modes depending on current state:
-  //   folded        → click unfolds (via onToggleFold)
-  //   depthLimited  → click expands one level past the depth cap (via onToggleExpand)
-  //   expandedPast  → click collapses back to the depth cap (via onToggleExpand)
-  //   normal        → click folds (via onToggleFold)
-  // Button is hidden on base-stopped non-root nodes (nothing to reveal).
-  const canAct = data.recipeCount > 0 && (
-    data.folded || data.depthLimited || data.expandedPast || !data.truncated
-  )
-  const toggleAction = () => {
-    if (data.depthLimited || data.expandedPast) data.onToggleExpand(data.nodeId)
-    else data.onToggleFold(data.name)
-  }
-
-  let btnCls: string
-  let btnTitle: string
-  let btnIcon: 'chevron-up' | 'chevron-down' | 'chevron-double-down'
-  if (data.folded) {
-    btnCls = 'bg-amber-500/90 border-amber-300/50 text-amber-50 hover:bg-amber-400'
-    btnTitle = 'Unfold recipe'
-    btnIcon = 'chevron-down'
-  } else if (data.depthLimited) {
-    btnCls = 'bg-sky-500/90 border-sky-300/50 text-sky-50 hover:bg-sky-400'
-    btnTitle = 'Expand past depth limit'
-    btnIcon = 'chevron-double-down'
-  } else if (data.expandedPast) {
-    btnCls = 'bg-sky-500/30 border-sky-400/40 text-sky-100 hover:bg-sky-500/50'
-    btnTitle = 'Collapse back to depth limit'
-    btnIcon = 'chevron-up'
-  } else {
-    btnCls = 'bg-zinc-900/95 border-white/20 text-zinc-300 hover:text-white hover:border-white/40'
-    btnTitle = 'Fold recipe (↑)'
-    btnIcon = 'chevron-up'
-  }
+  // Show fold button only when a toggle would actually change the view:
+  // expanded (not truncated) → can fold; folded → can unfold.
+  // Hide on depth-cap / base-stop truncation where toggling fold wouldn't help.
+  const canToggleFold = data.recipeCount > 0 && (data.folded || !data.truncated)
 
   return (
     <div className={`group relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md px-3 py-2.5 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-white/5 w-[180px]`}>
@@ -143,21 +109,20 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
         <div className="text-[8px] text-zinc-700 font-mono">d{data.depth}</div>
       </div>
 
-      {canAct && (
+      {canToggleFold && (
         <button
-          onClick={e => { e.stopPropagation(); toggleAction() }}
-          title={btnTitle}
-          className={`nodrag absolute -top-2 -right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all ${btnCls}`}
+          onClick={e => { e.stopPropagation(); data.onToggleFold(data.name) }}
+          title={data.folded ? 'Unfold recipe' : 'Fold recipe (↑)'}
+          className={`nodrag absolute -top-2 -right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all
+            ${data.folded
+              ? 'bg-amber-500/90 border-amber-300/50 text-amber-50 hover:bg-amber-400'
+              : 'bg-zinc-900/95 border-white/20 text-zinc-300 hover:text-white hover:border-white/40'}`}
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            {btnIcon === 'chevron-up' && (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
-            )}
-            {btnIcon === 'chevron-down' && (
+            {data.folded ? (
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-            )}
-            {btnIcon === 'chevron-double-down' && (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 6l-7 7-7-7M19 14l-7 7-7-7" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
             )}
           </svg>
         </button>
