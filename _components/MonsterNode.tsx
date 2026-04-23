@@ -35,7 +35,7 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
   const rankCls = rankColors[data.rank] ?? 'from-zinc-600 to-zinc-500 text-white'
 
   return (
-    <div className={`group relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md px-3 py-2.5 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-white/5 min-w-[160px]`}>
+    <div className={`group relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md px-3 py-2.5 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-white/5 w-[180px]`}>
       <style jsx>{`
         @keyframes pulse-subtle {
           0%, 100% { opacity: 1; transform: scale(1); }
@@ -45,7 +45,7 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
           animation: pulse-subtle 2s infinite ease-in-out;
         }
       `}</style>
-      
+
       {data.truncated && (
         <div
           className="absolute bottom-full left-1/2 -translate-x-1/2 w-[1px] h-12 pointer-events-none opacity-40"
@@ -78,51 +78,25 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
         </span>
       </div>
 
-      {/* Bottom Bar: Type & Recipe Cycling */}
-      <div className="mt-3 flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-zinc-800/50 px-2 py-1 rounded-lg border border-white/5">
-            <MonsterTypeIcon type={data.type} className="w-3 h-3" />
-            <span className="text-[10px] font-bold text-zinc-400 capitalize whitespace-nowrap">
-              {data.type}
-            </span>
-          </div>
-
+      {/* Bottom Bar: Type + Tag icons (fixed layout, same size regardless of tag count) */}
+      <div className="mt-3 flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 bg-zinc-800/50 px-2 py-1 rounded-lg border border-white/5 min-w-0">
+          <MonsterTypeIcon type={data.type} className="w-3 h-3 shrink-0" />
+          <span className="text-[10px] font-bold text-zinc-400 capitalize truncate">
+            {data.type}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 ml-auto">
           {data.tags.map(tag => (
-            <div key={tag} className="flex items-center gap-1 bg-zinc-800/50 px-2 py-1 rounded-lg border border-white/5">
+            <div
+              key={tag}
+              title={tag}
+              className="flex items-center justify-center w-[22px] h-[22px] bg-zinc-800/50 rounded-md border border-white/5"
+            >
               <MonsterTagIcon tag={tag} className="w-3 h-3" />
-              <span className="text-[10px] font-bold text-zinc-500 capitalize whitespace-nowrap">
-                {tag}
-              </span>
             </div>
           ))}
         </div>
-        
-        {data.recipeCount > 1 && (
-          <div className="flex items-center gap-1 bg-zinc-800/50 rounded-lg p-0.5 border border-white/5">
-            <button
-              onClick={e => { e.stopPropagation(); data.onCycleRecipe(data.nodeId, -1) }}
-              className="text-zinc-500 hover:text-white transition-colors p-0.5"
-              title="Previous recipe"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <span className="text-[10px] font-mono text-zinc-400 min-w-[20px] text-center">
-              {data.recipeIndex + 1}
-            </span>
-            <button
-              onClick={e => { e.stopPropagation(); data.onCycleRecipe(data.nodeId, 1) }}
-              className="text-zinc-500 hover:text-white transition-colors p-0.5"
-              title="Next recipe"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -130,6 +104,36 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
       </div>
 
       <Handle type="source" position={Position.Top} className="!w-2 !h-2 !bg-zinc-500 !border-none !transition-colors group-hover:!bg-white" />
+
+      {/* Recipe cycler — floats outside card so it doesn't affect the node's layout box */}
+      {data.recipeCount > 1 && (
+        <div className="nodrag absolute left-1/2 top-full -translate-x-1/2 mt-1.5 z-20">
+          <div className="flex items-center bg-zinc-900/95 backdrop-blur-md rounded-full border border-white/20 shadow-2xl shadow-black/60 overflow-hidden">
+            <button
+              onClick={e => { e.stopPropagation(); data.onCycleRecipe(data.nodeId, -1) }}
+              className="w-7 h-7 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+              title="Previous recipe"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div className="px-2.5 text-[10px] font-bold tracking-wider text-zinc-100 whitespace-nowrap uppercase select-none">
+              Recipe {data.recipeIndex + 1}
+              <span className="text-zinc-500"> / {data.recipeCount}</span>
+            </div>
+            <button
+              onClick={e => { e.stopPropagation(); data.onCycleRecipe(data.nodeId, 1) }}
+              className="w-7 h-7 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+              title="Next recipe"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
