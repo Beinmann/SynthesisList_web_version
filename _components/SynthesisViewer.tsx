@@ -576,6 +576,16 @@ export default function SynthesisViewer() {
               <div className="text-[10px] font-medium text-zinc-600">Experimental Protocol v2.0</div>
             </div>
 
+            <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+              <defs>
+                <linearGradient id="edge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3f3f46" stopOpacity="0" />
+                  <stop offset="50%" stopColor="#a1a1aa" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#3f3f46" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -593,14 +603,7 @@ export default function SynthesisViewer() {
               colorMode="dark"
               proOptions={{ hideAttribution: true }}
             >
-              <defs>
-                <linearGradient id="edge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#3f3f46" stopOpacity="0" />
-                  <stop offset="50%" stopColor="#a1a1aa" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#3f3f46" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <Background 
+              <Background
                 variant={BackgroundVariant.Dots} 
                 gap={24} 
                 size={1} 
