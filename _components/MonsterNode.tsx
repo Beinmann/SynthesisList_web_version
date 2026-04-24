@@ -137,7 +137,9 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
         </button>
       )}
 
-      <Handle type="source" position={Position.Top} className="!w-2 !h-2 !bg-zinc-500 !border-none !transition-colors group-hover:!bg-white" />
+      {data.recipeCount > 0 && (
+        <Handle type="source" position={Position.Top} className="!w-2 !h-2 !bg-zinc-500 !border-none !transition-colors group-hover:!bg-white" />
+      )}
 
       {/* Recipe cycler — floats outside card so it doesn't affect the node's layout box */}
       {showRecipeCycler && (
