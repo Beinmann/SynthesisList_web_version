@@ -15,6 +15,7 @@ export default function MonsterSearch({ onSelect }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const results = query.length < 1 ? [] : monsters
+    .filter(m => !m.tags.includes('intermediate'))
     .filter(m => m.name.toLowerCase().includes(query.toLowerCase()))
     .slice(0, 10)
 

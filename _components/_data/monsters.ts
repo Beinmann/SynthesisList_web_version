@@ -1,6 +1,6 @@
 export type Rank = 'X' | 'S' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'
 export type MonsterType = 'slime' | 'nature' | 'material' | 'dragon' | 'undead' | 'demon' | 'incarnus' | 'beast'
-export type MonsterTag = 'base' | 'synth' | 'special'
+export type MonsterTag = 'base' | 'synth' | 'special' | 'intermediate'
 export interface Monster { name: string; type: MonsterType; rank: Rank; tags: MonsterTag[] }
 export const monsters: Monster[] = [
   {
@@ -225,7 +225,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -257,7 +258,8 @@ export const monsters: Monster[] = [
     "type": "demon",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -367,7 +369,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -432,7 +435,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3710,7 +3714,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3718,7 +3723,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3726,7 +3732,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3734,7 +3741,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3742,7 +3750,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3750,7 +3759,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3758,7 +3768,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3766,7 +3777,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3783,7 +3795,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3791,7 +3804,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3799,7 +3813,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3807,7 +3822,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3815,7 +3831,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3823,7 +3840,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3831,7 +3849,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3839,7 +3858,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3847,7 +3867,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3855,7 +3876,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3872,7 +3894,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3880,7 +3903,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3888,7 +3912,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3896,7 +3921,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3904,7 +3930,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3912,7 +3939,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3920,7 +3948,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3928,7 +3957,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3936,7 +3966,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3944,7 +3975,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3952,7 +3984,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3960,7 +3993,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3968,7 +4002,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3976,7 +4011,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3984,7 +4020,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -3992,7 +4029,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4008,7 +4046,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4016,7 +4055,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4024,7 +4064,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4032,7 +4073,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4040,7 +4082,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4048,7 +4091,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4056,7 +4100,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4064,7 +4109,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4072,7 +4118,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4080,7 +4127,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4096,7 +4144,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4104,7 +4153,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4112,7 +4162,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4120,7 +4171,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4128,7 +4180,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4136,7 +4189,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4144,7 +4198,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4152,7 +4207,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4160,7 +4216,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4168,7 +4225,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4176,7 +4234,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4184,7 +4243,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4192,7 +4252,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4200,7 +4261,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4208,7 +4270,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4216,7 +4279,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4224,7 +4288,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4232,7 +4297,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4248,7 +4314,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4256,7 +4323,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4264,7 +4332,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4272,7 +4341,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4280,7 +4350,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4288,7 +4359,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4296,7 +4368,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4304,7 +4377,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4312,7 +4386,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4320,7 +4395,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4328,7 +4404,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4344,7 +4421,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4352,7 +4430,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4360,7 +4439,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4368,7 +4448,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4376,7 +4457,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4384,7 +4466,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4392,7 +4475,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4400,7 +4484,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4408,7 +4493,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4416,7 +4502,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4424,7 +4511,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4432,7 +4520,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4440,7 +4529,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4448,7 +4538,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4456,7 +4547,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4464,7 +4556,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4472,7 +4565,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4480,7 +4574,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4488,7 +4583,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4496,7 +4592,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4504,7 +4601,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4512,7 +4610,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4520,7 +4619,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4528,7 +4628,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4536,7 +4637,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4544,7 +4646,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4552,7 +4655,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4560,7 +4664,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4568,7 +4673,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4576,7 +4682,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4584,7 +4691,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4592,7 +4700,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4600,7 +4709,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4616,7 +4726,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4624,7 +4735,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4640,7 +4752,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4648,7 +4761,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4664,7 +4778,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4672,7 +4787,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4680,7 +4796,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4688,7 +4805,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4696,7 +4814,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4704,7 +4823,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4712,7 +4832,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4720,7 +4841,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4728,7 +4850,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4736,7 +4859,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4744,7 +4868,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4752,7 +4877,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4760,7 +4886,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4768,7 +4895,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4776,7 +4904,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4784,7 +4913,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4792,7 +4922,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4800,7 +4931,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4816,7 +4948,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4824,7 +4957,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4832,7 +4966,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4840,7 +4975,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4848,7 +4984,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4856,7 +4993,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4864,7 +5002,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4872,7 +5011,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4880,7 +5020,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4888,7 +5029,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4896,7 +5038,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4904,7 +5047,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4912,7 +5056,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4920,7 +5065,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4928,7 +5074,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4936,7 +5083,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4944,7 +5092,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4952,7 +5101,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4960,7 +5110,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4968,7 +5119,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4976,7 +5128,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4984,7 +5137,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -4992,7 +5146,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5000,7 +5155,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5008,7 +5164,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5024,7 +5181,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5032,7 +5190,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5040,7 +5199,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5048,7 +5208,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5056,7 +5217,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5064,7 +5226,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5072,7 +5235,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5088,7 +5252,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5096,7 +5261,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5104,7 +5270,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5112,7 +5279,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5120,7 +5288,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5128,7 +5297,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5136,7 +5306,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5144,7 +5315,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5152,7 +5324,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5160,7 +5333,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5168,7 +5342,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5176,7 +5351,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5184,7 +5360,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5192,7 +5369,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5200,7 +5378,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5208,7 +5387,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5216,7 +5396,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5224,7 +5405,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5232,7 +5414,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5240,7 +5423,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5248,7 +5432,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5256,7 +5441,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5264,7 +5450,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5272,7 +5459,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5280,7 +5468,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5288,7 +5477,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5296,7 +5486,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5312,7 +5503,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5320,7 +5512,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5328,7 +5521,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5336,7 +5530,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5344,7 +5539,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5352,7 +5548,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5360,7 +5557,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5368,7 +5566,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5376,7 +5575,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5384,7 +5584,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5392,7 +5593,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5400,7 +5602,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5424,7 +5627,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5432,7 +5636,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5440,7 +5645,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5448,7 +5654,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5456,7 +5663,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5464,7 +5672,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5472,7 +5681,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5480,7 +5690,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5496,7 +5707,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5504,7 +5716,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5512,7 +5725,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5520,7 +5734,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5528,7 +5743,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5536,7 +5752,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5544,7 +5761,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5552,7 +5770,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5560,7 +5779,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5568,7 +5788,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5576,7 +5797,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5584,7 +5806,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5592,7 +5815,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5600,7 +5824,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5608,7 +5833,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5616,7 +5842,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5624,7 +5851,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5632,7 +5860,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5640,7 +5869,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5648,7 +5878,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5656,7 +5887,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5664,7 +5896,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5672,7 +5905,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5680,7 +5914,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5688,7 +5923,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5696,7 +5932,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5713,7 +5950,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5721,7 +5959,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5729,7 +5968,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5737,7 +5977,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5745,7 +5986,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5753,7 +5995,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5761,7 +6004,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5769,7 +6013,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5777,7 +6022,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5785,7 +6031,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5793,7 +6040,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5801,7 +6049,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5809,7 +6058,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5817,7 +6067,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5825,7 +6076,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5833,7 +6085,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5841,7 +6094,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5849,7 +6103,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5857,7 +6112,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5865,7 +6121,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5873,7 +6130,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5881,7 +6139,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5889,7 +6148,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5897,7 +6157,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5905,7 +6166,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5913,7 +6175,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5921,7 +6184,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5929,7 +6193,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5937,7 +6202,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5945,7 +6211,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5953,7 +6220,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5961,7 +6229,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5977,7 +6246,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5985,7 +6255,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -5993,7 +6264,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6001,7 +6273,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6009,7 +6282,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6017,7 +6291,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6025,7 +6300,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6033,7 +6309,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6041,7 +6318,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6049,7 +6327,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6057,7 +6336,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6065,7 +6345,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6073,7 +6354,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6081,7 +6363,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6089,7 +6372,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6097,7 +6381,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6105,7 +6390,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6113,7 +6399,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6121,7 +6408,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6129,7 +6417,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6145,7 +6434,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6161,7 +6451,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6177,7 +6468,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6185,7 +6477,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6193,7 +6486,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6201,7 +6495,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6209,7 +6504,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6217,7 +6513,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6225,7 +6522,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6233,7 +6531,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6241,7 +6540,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6249,7 +6549,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6257,7 +6558,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6273,7 +6575,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6281,7 +6584,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6289,7 +6593,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6297,7 +6602,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6305,7 +6611,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6313,7 +6620,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6321,7 +6629,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6329,7 +6638,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6337,7 +6647,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6345,7 +6656,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6353,7 +6665,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6361,7 +6674,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6369,7 +6683,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6377,7 +6692,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   },
   {
@@ -6385,7 +6701,8 @@ export const monsters: Monster[] = [
     "type": "na",
     "rank": "NA",
     "tags": [
-      "synth"
+      "synth",
+      "intermediate"
     ]
   }
 ] as Monster[]

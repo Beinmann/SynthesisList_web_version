@@ -35,14 +35,14 @@ Types (in `_data/monsters.ts` and `recipes.ts`):
 ```ts
 type Rank = 'X' | 'S' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'
 type MonsterType = 'slime' | 'nature' | 'material' | 'dragon' | 'undead' | 'demon' | 'incarnus' | 'beast'
-type MonsterTag = 'base' | 'synth' | 'special'
+type MonsterTag = 'base' | 'synth' | 'special' | 'intermediate'
 interface Monster { name: string; type: MonsterType; rank: Rank; tags: MonsterTag[] }
 interface Recipe  { result: string; parent1: string; parent2: string }
 ```
 
 **All map lookups use `name.toLowerCase()` as the key.** `monsterByName` and `recipesByResult` are keyed by lowercase. Source data casing is inconsistent (mixed title-case and lowercase in `recipes.ts`) — never look up by raw name, always lowercase first.
 
-**`tags` is authoritative for tree semantics.** `base` means catchable/terminal (stops recursion, counts as 1 leaf). `synth` means obtainable via synthesis. `special` marks scripted/unique. `fullLeafCount` treats `base` as a leaf unless it's the current root. If you add a new tag with tree-stopping semantics, update `fullLeafCount` and the `stopAtBase` check in `buildGraph`.
+**`tags` is authoritative for tree semantics.** `base` means catchable/terminal (stops recursion, counts as 1 leaf). `synth` means obtainable via synthesis. `special` marks scripted/unique. `intermediate` marks "not real" monsters that exist only as 4-way fusion parts / family placeholders / level-variant steps — these are hidden from `MonsterSearch` but still appear in the graph when reached by recipe traversal. Auto-populated for every rank `NA` monster; the filter in `MonsterSearch` reads the tag, not the rank, so you can add `intermediate` to any monster to hide it from search. `fullLeafCount` treats `base` as a leaf unless it's the current root. If you add a new tag with tree-stopping semantics, update `fullLeafCount` and the `stopAtBase` check in `buildGraph`.
 
 ---
 
