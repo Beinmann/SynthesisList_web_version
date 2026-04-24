@@ -821,14 +821,6 @@ export default function SynthesisViewer() {
               <div className="pointer-events-auto">
                 <MonsterSearch onSelect={handleSelect} />
               </div>
-
-              <div className="pointer-events-auto flex flex-col gap-1">
-                <div className="flex items-center gap-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl p-2 px-3 self-start shadow-xl">
-                  <div className="text-[10px] text-zinc-500 font-medium">
-                    {nodes.filter(n => n.type === 'monster' && n.data.phase !== 'exiting' && !n.data.isContext).length} monsters
-                  </div>
-                </div>
-              </div>
             </div>
 
             {navHistory.length > 0 && (
