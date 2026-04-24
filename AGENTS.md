@@ -42,7 +42,7 @@ interface Recipe  { result: string; parent1: string; parent2: string }
 
 **All map lookups use `name.toLowerCase()` as the key.** `monsterByName` and `recipesByResult` are keyed by lowercase. Source data casing is inconsistent (mixed title-case and lowercase in `recipes.ts`) — never look up by raw name, always lowercase first.
 
-**`tags` is authoritative for tree semantics.** `base` means catchable/terminal (stops recursion, counts as 1 leaf). `synth` means obtainable via synthesis. `special` marks scripted/unique. `intermediate` marks "not real" monsters that exist only as 4-way fusion parts / family placeholders / level-variant steps — these are hidden from `MonsterSearch` but still appear in the graph when reached by recipe traversal. Auto-populated for every rank `NA` monster; the filter in `MonsterSearch` reads the tag, not the rank, so you can add `intermediate` to any monster to hide it from search. `fullLeafCount` treats `base` as a leaf unless it's the current root. If you add a new tag with tree-stopping semantics, update `fullLeafCount` and the `stopAtBase` check in `buildGraph`.
+**`tags` is authoritative for tree semantics.** `base` means catchable/terminal — counts as 1 leaf and the tree defaults to folded at base monsters (since catching them is cheaper than recursing into their recipe). `synth` means obtainable via synthesis. `special` marks scripted/unique. `intermediate` marks "not real" monsters that exist only as 4-way fusion parts / family placeholders / level-variant steps — these are hidden from `MonsterSearch` but still appear in the graph when reached by recipe traversal. Auto-populated for every rank `NA` monster; the filter in `MonsterSearch` reads the tag, not the rank, so you can add `intermediate` to any monster to hide it from search. `fullLeafCount` treats `base` as a leaf unless it's the current root. If you add a new tag with tree-stopping semantics, update `fullLeafCount` and `foldedState` in `SynthesisViewer.tsx`.
 
 ---
 
@@ -87,7 +87,7 @@ Logical sections, top-to-bottom:
 
 **Persistence schema is uncommitted.** `localStorage['dqmj2_recipe_indices']` is a flat `{ [lowercaseName]: number }` (persists across sessions). `sessionStorage['dqmj2_folded_recipes']` is a flat `{ [lowercaseName]: true }` (per-tab; entries are deleted when toggled off, and the key is removed entirely when the map empties). If you change either shape (e.g. to version it), guard the parse — currently a malformed value is caught and logged but returns `{}`.
 
-**Base monsters as root.** `fullLeafCount(name, ..., isRoot=true)` intentionally recurses through a base monster when it's the root — otherwise the root would always report 1 leaf. The `stopAtBase` gate in `buildGraph` has the matching `!isRoot` carve-out. Keep these two in lockstep.
+**Fold-state storage has inverted meaning for base monsters.** `foldedRecipes[key]` means "user has overridden the default fold state". The default is folded for base-with-recipes, unfolded otherwise — so a `true` entry unfolds a base but folds a non-base. All computation goes through `foldedState(tags, override)`; do not read `foldedRecipes[key]` directly for a display decision. Root always ignores the override (otherwise the current focus would render collapsed). `fullLeafCount(name, ..., isRoot=true)` has the matching `!isRoot` carve-out — keep these in lockstep.
 
 ---
 

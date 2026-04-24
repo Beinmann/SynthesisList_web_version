@@ -142,6 +142,14 @@ function fullLeafCount(
   return n
 }
 
+// Base monsters with recipes default to folded (they're catchable — no need
+// to recurse); everything else defaults to unfolded. `foldedRecipes[key]`
+// stores a user override that flips whichever default applies.
+function foldedState(tags: readonly string[], userOverride: boolean): boolean {
+  const isBase = tags.includes('base')
+  return isBase ? !userOverride : userOverride
+}
+
 function buildGraph(
   rootName: string,
   recipeIndices: Record<string, number>,
@@ -168,13 +176,9 @@ function buildGraph(
       const recipeIndex = Math.min(recipeIndices[key] ?? 0, Math.max(0, recipes.length - 1))
 
       const tags = monster?.tags ?? ['base']
-      const isBase = tags.includes('base')
       const isRoot = depth === 0
-      const stopAtBase = isBase && !isRoot
-      // Root always displays its recipe even if flagged as folded — the fold
-      // flag is a "how to render elsewhere" hint and must not hide the tree
-      // the user is currently focused on. Stored state stays untouched.
-      const isFolded = !isRoot && foldedRecipes[key] === true
+      // Root always displays its recipe, so the fold override is ignored there.
+      const isFolded = !isRoot && foldedState(tags, foldedRecipes[key] === true)
 
       nodes.push({
         id: nodeId,
@@ -188,7 +192,7 @@ function buildGraph(
           recipeIndex,
           recipeCount: recipes.length,
           depth,
-          truncated: (depth === MAX_DEPTH || stopAtBase || isFolded) && recipes.length > 0,
+          truncated: (depth === MAX_DEPTH || isFolded) && recipes.length > 0,
           folded: isFolded,
           leafCount: fullLeafCount(name, new Set(), recipeIndices, leafMemo, isRoot),
           onMakeRoot,
@@ -198,7 +202,7 @@ function buildGraph(
         position: { x: slotX(depth, slotK), y: -depth * NODE_H },
       })
 
-      if (depth < MAX_DEPTH && recipes.length > 0 && !stopAtBase && !isFolded) {
+      if (depth < MAX_DEPTH && recipes.length > 0 && !isFolded) {
         const r = recipes[recipeIndex]
         visit(r.parent1, depth + 1, slotK * 2, nodeId, `${nodeId}>p1`)
         visit(r.parent2, depth + 1, slotK * 2 + 1, nodeId, `${nodeId}>p2`)
@@ -269,6 +273,11 @@ function injectContext(
 
   const memo = new Map<string, number>()
 
+  const parentTags = parentMonster?.tags ?? ['base']
+  const siblingTags = siblingMonster?.tags ?? ['base']
+  const parentFolded = foldedState(parentTags, foldedRecipes[parentKey] === true)
+  const siblingFolded = foldedState(siblingTags, foldedRecipes[siblingKey] === true)
+
   const allNodes: Node<MonsterNodeData>[] = [
     ...laid,
     {
@@ -278,13 +287,13 @@ function injectContext(
         name: parentMonster?.name ?? parent,
         rank: (parentMonster?.rank ?? '?') as Rank,
         type: (parentMonster?.type ?? 'material') as MonsterType,
-        tags: parentMonster?.tags ?? ['base'],
+        tags: parentTags,
         nodeId: parentNodeId,
         recipeIndex: safeIdx,
         recipeCount: 1,
         depth: 0,
         truncated: false,
-        folded: foldedRecipes[parentKey] === true,
+        folded: parentFolded,
         leafCount: fullLeafCount(parent, new Set(), recipeIndices, memo, true),
         onMakeRoot: handlers.onMakeRoot,
         onCycleRecipe: handlers.onCycleRecipe,
@@ -299,13 +308,13 @@ function injectContext(
         name: siblingMonster?.name ?? siblingName,
         rank: (siblingMonster?.rank ?? '?') as Rank,
         type: (siblingMonster?.type ?? 'material') as MonsterType,
-        tags: siblingMonster?.tags ?? ['base'],
+        tags: siblingTags,
         nodeId: siblingNodeId,
         recipeIndex: 0,
         recipeCount: siblingRecipes.length,
         depth: 0,
         truncated: siblingRecipes.length > 0,
-        folded: foldedRecipes[siblingKey] === true,
+        folded: siblingFolded,
         isContext: true,
         leafCount: fullLeafCount(siblingName, new Set(), recipeIndices, memo, false),
         onMakeRoot: handlers.onMakeRoot,
