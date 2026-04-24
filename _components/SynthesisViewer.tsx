@@ -507,6 +507,10 @@ export default function SynthesisViewer() {
   const offsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const navActionRef = useRef<NavAction>({ type: 'reset' })
   const exitTimeoutRef = useRef<number | null>(null)
+  // Holds the RAF that promotes fresh nodes from their stage-1 "from" position
+  // (their nearest persistent ancestor's prev position) to their canonical
+  // position. Cancelled if a new nav lands before the second frame paints.
+  const stage2RafRef = useRef<number | null>(null)
   const resetViewportRef = useRef<boolean>(true)
   const prevNodesRef = useRef<Node<MonsterNodeData>[]>([])
   // Monotonic counter for fresh React-Flow node ids. Using sequential ids
@@ -705,6 +709,7 @@ export default function SynthesisViewer() {
   useEffect(() => {
     return () => {
       if (exitTimeoutRef.current !== null) clearTimeout(exitTimeoutRef.current)
+      if (stage2RafRef.current !== null) cancelAnimationFrame(stage2RafRef.current)
     }
   }, [])
 
@@ -747,10 +752,68 @@ export default function SynthesisViewer() {
       .filter(n => n.data.phase !== 'exiting' && !newIds.has(n.id))
       .map(n => ({ ...n, data: { ...n.data, phase: 'exiting' as const } }))
 
+    // Stage-1 / stage-2 commit. Fresh nodes (no persistent counterpart in the
+    // prev render) initially mount at their nearest persistent ancestor's
+    // *prev* world position, then on the next paint we update them to their
+    // canonical position so the CSS `transition: transform` fires. This makes
+    // a freshly expanded subtree (e.g. the formerly-ctx-sibling subtree on
+    // nav-back) slide outward from its parent in lockstep with the persistent
+    // nodes' transitions, rather than snapping into existence at their tight
+    // depth-N slot positions.
+    if (stage2RafRef.current !== null) {
+      cancelAnimationFrame(stage2RafRef.current)
+      stage2RafRef.current = null
+    }
+    const prevPosByPrevNid = new Map<string, { x: number; y: number }>()
+    for (const p of prevCommitted) {
+      if (p.data.phase === 'exiting') continue
+      prevPosByPrevNid.set(p.data.nodeId, p.position)
+    }
+    const rootMatchKey = matchKeyForAction(root.toLowerCase(), action)
+    const rootFallback = prevPosByPrevNid.get(rootMatchKey) ?? null
+    const fromPositionFor = (freshNid: string): { x: number; y: number } | null => {
+      let cur = freshNid
+      while (true) {
+        const idx = cur.lastIndexOf('>')
+        if (idx === -1) break
+        cur = cur.slice(0, idx)
+        const pos = prevPosByPrevNid.get(matchKeyForAction(cur, action))
+        if (pos) return pos
+      }
+      return rootFallback
+    }
+    let needStage2 = false
+    const stage1Nodes = remappedNodes.map(n => {
+      if (prevPosByPrevNid.has(matchKeyForAction(n.data.nodeId, action))) return n
+      const from = fromPositionFor(n.data.nodeId)
+      if (!from) return n
+      if (from.x === n.position.x && from.y === n.position.y) return n
+      needStage2 = true
+      return { ...n, position: from }
+    })
+
     prevNodesRef.current = remappedNodes
 
-    setNodes([...remappedNodes, ...exiting])
+    setNodes([...stage1Nodes, ...exiting])
     setEdges(remappedEdges)
+
+    if (needStage2) {
+      stage2RafRef.current = requestAnimationFrame(() => {
+        stage2RafRef.current = requestAnimationFrame(() => {
+          stage2RafRef.current = null
+          const finalPosById = new Map<string, { x: number; y: number }>(
+            remappedNodes.map(n => [n.id, n.position]),
+          )
+          setNodes(curr => curr.map(n => {
+            if (n.data.phase === 'exiting') return n
+            const final = finalPosById.get(n.id)
+            if (!final) return n
+            if (final.x === n.position.x && final.y === n.position.y) return n
+            return { ...n, position: final }
+          }))
+        })
+      })
+    }
 
     if (exitTimeoutRef.current !== null) clearTimeout(exitTimeoutRef.current)
     if (exiting.length > 0) {
