@@ -17,6 +17,7 @@ dqmj2_synthesis/
 │   ├── SynthesisViewerLoader.tsx# dynamic() wrapper so @xyflow/react is client-only
 │   ├── MonsterNode.tsx          # React Flow custom node
 │   ├── MonsterSearch.tsx        # search box + suggestion list
+│   ├── FeaturedMonsters.tsx     # curated picks shown on the empty state
 │   ├── MonsterTypeIcon.tsx      # per-type SVG icon + color
 │   └── MonsterTagIcon.tsx       # per-tag SVG icon + color
 ├── page.tsx                     # renders SynthesisViewerLoader
@@ -123,7 +124,7 @@ Logical sections, top-to-bottom:
 
 # Experimental surface
 
-Nothing is currently flagged experimental — the viewer as-is is the load-bearing shape.
+- **FeaturedMonsters** (`FeaturedMonsters.tsx`): curated 8-card grid on the empty state so a cold visitor has something to click. Hard-coded list of monster names, no data plumbing. Promote: if kept, consider letting the list reflect a "recently viewed" history. Kill: if the empty state is reworked or the list feels dated — delete the file and remove the single import + render site in `SynthesisViewer.tsx`.
 
 When adding an experiment, prefer this pattern so it stays prunable:
 - Put it in its own file under `_components/` (or a `_components/experimental/` folder if it gets crowded).

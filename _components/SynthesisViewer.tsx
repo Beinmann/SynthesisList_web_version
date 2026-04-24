@@ -18,6 +18,7 @@ import '@xyflow/react/dist/style.css'
 
 import MonsterNode, { type MonsterNodeData } from './MonsterNode'
 import MonsterSearch from './MonsterSearch'
+import FeaturedMonsters from './FeaturedMonsters'
 import { monsterByName, recipesByResult } from './_data'
 import type { Rank, MonsterType } from './_data'
 
@@ -883,13 +884,14 @@ export default function SynthesisViewer() {
             </ReactFlow>
           </>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center bg-[#09090b]">
+          <div className="flex h-full flex-col items-center justify-center bg-[#09090b] px-6 overflow-y-auto">
             <div className="w-72">
               <MonsterSearch onSelect={handleSelect} />
             </div>
             <p className="mt-4 text-zinc-600 text-sm font-medium">
               Search for a monster to begin the synthesis sequence
             </p>
+            <FeaturedMonsters onSelect={handleSelect} />
           </div>
         )}
       </div>
