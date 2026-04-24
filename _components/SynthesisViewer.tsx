@@ -27,8 +27,8 @@ const NODE_H = 160
 const VIEW_PADDING = 24
 // Duration of the camera pan that precedes a navigation commit, and of the
 // fade used for added/removed nodes.
-const PAN_MS = 350
-const FADE_MS = 350
+const PAN_MS = 5000
+const FADE_MS = 5000
 // Fixed 4-level tree (depths 0..3): 1 + 2 + 4 + 8 = 15 slots. Every node
 // reserves its canonical slot so the layout stays identical across
 // navigations — gaps appear where a subtree is shorter, rather than sibling
