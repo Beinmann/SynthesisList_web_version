@@ -20,8 +20,7 @@ dqmj2_synthesis/
 │   ├── MonsterTypeIcon.tsx      # per-type SVG icon + color
 │   └── MonsterTagIcon.tsx       # per-tag SVG icon + color
 ├── page.tsx                     # renders SynthesisViewerLoader
-├── README.md
-└── PHASE2_NAVIGATION_PLAN.md    # pending work: nav-transition continuity; read before touching nav animation / rebuild flow
+└── README.md
 ```
 
 **Do not read `monsters.ts` or `recipes.ts` in full.** They are data, not logic — ~9.5k lines combined. Read the type declarations at the top of `monsters.ts` and `recipes.ts` and the first few records if you need a sample. The Map-based accessors live in `_data/index.ts` and that's the surface code should use.
@@ -48,7 +47,7 @@ interface Recipe  { result: string; parent1: string; parent2: string }
 
 # SynthesisViewer — what's where
 
-`SynthesisViewer.tsx` is one 600-line file on purpose; splitting it would add prop-drilling across layout, state, keyboard, and viewport concerns that all coordinate in one effect. Don't split it unless you have a clean seam.
+`SynthesisViewer.tsx` is one large single file on purpose; splitting it would add prop-drilling across layout, state, keyboard, and viewport concerns that all coordinate in one effect. Don't split it unless you have a clean seam.
 
 Logical sections, top-to-bottom:
 - **Edge / node type defs** — `FlowingEdge` (animated bezier). All graph nodes use the single `monster` type; context nodes (parent/sibling) are regular monster nodes flagged with `data.isContext`.
