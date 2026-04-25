@@ -25,10 +25,13 @@ import type { Rank, MonsterType } from './_data'
 const NODE_W = 200
 const NODE_H = 160
 const VIEW_PADDING = 24
-// Duration of the camera pan that precedes a navigation commit, and of the
-// fade used for added/removed nodes.
+// Phase 1 (parallel, t = 0..PAN_MS): camera pan + persistent-position RAF +
+// exit fade-out for nodes/edges no longer in the new tree.
+// Phase 2 (sequential, t = PAN_MS..PAN_MS + FADE_IN_MS): fresh nodes/edges
+// fade in.
 const PAN_MS = 5000
-const FADE_MS = 5000
+const FADE_OUT_MS = 5000
+const FADE_IN_MS = 5000
 // Fixed 4-level tree (depths 0..3): 1 + 2 + 4 + 8 = 15 slots. Every node
 // reserves its canonical slot so the layout stays identical across
 // navigations — gaps appear where a subtree is shorter, rather than sibling
@@ -239,44 +242,24 @@ function injectContext(
   const parentEntry = navHistory.length > 0 ? navHistory[navHistory.length - 1] : null
   if (!parentEntry) return { nodes: [...laid], edges: [...edges] }
 
-  const { parent, isParent1, recipeIdx } = parentEntry
+  const { parent, recipeIdx } = parentEntry
   const parentKey = parent.toLowerCase()
   const parentRecipes = recipesByResult.get(parentKey) ?? []
   const safeIdx = Math.min(recipeIdx, Math.max(0, parentRecipes.length - 1))
-  const parentRecipe = parentRecipes[safeIdx]
   const parentMonster = monsterByName.get(parentKey)
   const rootNode = laid.find(n => n.id === root.toLowerCase())
 
-  if (!rootNode || !parentRecipe) return { nodes: [...laid], edges: [...edges] }
+  if (!rootNode) return { nodes: [...laid], edges: [...edges] }
 
-  const rootX = rootNode.position.x
-
-  const siblingName = isParent1 ? parentRecipe.parent2 : parentRecipe.parent1
-  const siblingKey = siblingName.toLowerCase()
-  const siblingMonster = monsterByName.get(siblingKey)
-  const siblingRecipes = recipesByResult.get(siblingKey) ?? []
-
-  // Sibling sits one NODE_W outside the root subtree's reserved leaf extent.
-  // Using the canonical reservation (not whatever rendered) keeps the parent
-  // and sibling pinned to stable positions across navigations.
-  const canonicalHalfExtent = ((1 << MAX_DEPTH) - 1) * NODE_W / 2
-  const siblingX = isParent1
-    ? rootX + canonicalHalfExtent + NODE_W
-    : rootX - canonicalHalfExtent - NODE_W
-  const parentX = (rootX + siblingX) / 2
+  // Parent sits directly above the focus, one NODE_H higher in world coords
+  // (which renders below in screen space, since +y is down in React Flow).
+  const parentX = rootNode.position.x
   const parentY = rootNode.position.y + NODE_H
 
-  // Scope the context ids by monster key so different parents/siblings
-  // get distinct DOM nodes and fade in/out between navigations.
   const parentNodeId = `__ctx_parent__:${parentKey}`
-  const siblingNodeId = `__ctx_sibling__:${siblingKey}`
-
   const memo = new Map<string, number>()
-
   const parentTags = parentMonster?.tags ?? ['base']
-  const siblingTags = siblingMonster?.tags ?? ['base']
   const parentFolded = foldedState(parentTags, foldedRecipes[parentKey] === true)
-  const siblingFolded = foldedState(siblingTags, foldedRecipes[siblingKey] === true)
 
   const allNodes: Node<MonsterNodeData>[] = [
     ...laid,
@@ -301,28 +284,6 @@ function injectContext(
       },
       position: { x: parentX, y: parentY },
     },
-    {
-      id: siblingNodeId,
-      type: 'monster',
-      data: {
-        name: siblingMonster?.name ?? siblingName,
-        rank: (siblingMonster?.rank ?? '?') as Rank,
-        type: (siblingMonster?.type ?? 'material') as MonsterType,
-        tags: siblingTags,
-        nodeId: siblingNodeId,
-        recipeIndex: 0,
-        recipeCount: siblingRecipes.length,
-        depth: 0,
-        truncated: siblingRecipes.length > 0,
-        folded: siblingFolded,
-        isContext: true,
-        leafCount: fullLeafCount(siblingName, new Set(), recipeIndices, memo, false),
-        onMakeRoot: handlers.onMakeRoot,
-        onCycleRecipe: handlers.onCycleRecipe,
-        onToggleFold: handlers.onToggleFold,
-      },
-      position: { x: siblingX, y: rootNode.position.y },
-    },
   ]
 
   const allEdges: Edge[] = [
@@ -333,13 +294,6 @@ function injectContext(
       target: root.toLowerCase(),
       type: 'flowing',
       style: { stroke: '#3f3f46' },
-    },
-    {
-      id: '__ctx_edge_sibling__',
-      source: parentNodeId,
-      target: siblingNodeId,
-      type: 'flowing',
-      style: { stroke: '#3f3f46', strokeDasharray: '6 4' },
     },
   ]
 
@@ -382,17 +336,11 @@ function matchKeyForAction(nid: string, action: NavAction): string {
   if (action.type === 'nav-forward') {
     const prevRootLc = action.prevRoot.toLowerCase()
     const dir = action.dir
-    const opp: 'p1' | 'p2' = dir === 'p1' ? 'p2' : 'p1'
 
     if (nid.startsWith('__ctx_parent__:')) {
       const key = nid.slice('__ctx_parent__:'.length)
       // New ctx parent = the root we just left.
       return key === prevRootLc ? prevRootLc : nid
-    }
-    if (nid.startsWith('__ctx_sibling__:')) {
-      const key = nid.slice('__ctx_sibling__:'.length)
-      // New ctx sibling = the opposite-dir child we didn't dive into.
-      return `${prevRootLc}>${opp}:${key}`
     }
     // Tree node at path X in the new root's tree was at path prevRoot>dir:X
     // in the previous tree.
@@ -403,17 +351,13 @@ function matchKeyForAction(nid: string, action: NavAction): string {
     const prevRootLc = action.prevRoot.toLowerCase()
     const newRootLc = action.newRoot.toLowerCase()
     const prevDir = action.prevDir
-    const opp: 'p1' | 'p2' = prevDir === 'p1' ? 'p2' : 'p1'
     const prevDirPrefix = `${newRootLc}>${prevDir}:`
-    const oppPrefix = `${newRootLc}>${opp}:`
 
     if (nid === newRootLc) return `__ctx_parent__:${newRootLc}`
     if (nid === `${prevDirPrefix}${prevRootLc}`) return prevRootLc
     if (nid.startsWith(`${prevDirPrefix}${prevRootLc}>`)) return nid.slice(prevDirPrefix.length)
-    if (nid.startsWith(oppPrefix)) {
-      const rest = nid.slice(oppPrefix.length)
-      if (!rest.includes('>')) return `__ctx_sibling__:${rest}`
-    }
+    // Anything on the opposite side of the new root was never visible in the
+    // prev tree (we no longer render a ctx sibling), so it's fresh.
     return nid
   }
 
@@ -531,11 +475,12 @@ export default function SynthesisViewer() {
   // recomputes edge paths on every frame — otherwise edges would snap to the
   // new endpoints while the visual node is still mid-flight.
   const animRafRef = useRef<number | null>(null)
-  // Edge ids from the last commit. Used for fresh-edge detection (not strictly
-  // needed for behaviour today since CSS targets all `.react-flow__edge` and
-  // the keyframe only fires on first mount, but kept as a hook in case we
-  // later want to differentiate fresh vs. persistent edges in JS).
-  const prevEdgeIdsRef = useRef<Set<string>>(new Set())
+  // Full edge objects from the last commit. We diff against this to detect
+  // exiting edges (in prev, not in new) and tag them with `exiting-edge` so
+  // they fade out before being stripped via edgeCleanupTimeoutRef.
+  const prevEdgesRef = useRef<Edge[]>([])
+  // Strips exiting edges from the edges state after their fade-out completes.
+  const edgeCleanupTimeoutRef = useRef<number | null>(null)
   const resetViewportRef = useRef<boolean>(true)
   const prevNodesRef = useRef<Node<MonsterNodeData>[]>([])
   // Monotonic counter for fresh React-Flow node ids. Using sequential ids
@@ -675,17 +620,14 @@ export default function SynthesisViewer() {
     const prev = history[history.length - 1]
     const prevDir: 'p1' | 'p2' = prev.isParent1 ? 'p1' : 'p2'
 
-    // Ctx parent's canonical position in the current tree — same formula
-    // injectContext uses. The new root (= prev.parent) lands there.
-    const canonicalHalfExtent = ((1 << MAX_DEPTH) - 1) * NODE_W / 2
-    const siblingCanonicalX = prev.isParent1
-      ? canonicalHalfExtent + NODE_W
-      : -(canonicalHalfExtent + NODE_W)
-    const parentCanonical = { x: siblingCanonicalX / 2, y: NODE_H }
+    // Ctx parent now sits directly above the focus (no horizontal sibling
+    // offset), so the new world position the new root lands at is just
+    // (prevOffset.x, prevOffset.y + NODE_H). prevDir is still tracked for
+    // matchKeyForAction's persistent-id remap.
     const prevOffset = offsetRef.current
     const newOffset = {
-      x: parentCanonical.x + prevOffset.x,
-      y: parentCanonical.y + prevOffset.y,
+      x: prevOffset.x,
+      y: prevOffset.y + NODE_H,
     }
 
     const nextHistory = history.slice(0, -1)
@@ -735,6 +677,7 @@ export default function SynthesisViewer() {
     return () => {
       if (exitTimeoutRef.current !== null) clearTimeout(exitTimeoutRef.current)
       if (animRafRef.current !== null) cancelAnimationFrame(animRafRef.current)
+      if (edgeCleanupTimeoutRef.current !== null) clearTimeout(edgeCleanupTimeoutRef.current)
     }
   }, [])
 
@@ -769,47 +712,41 @@ export default function SynthesisViewer() {
       idCounterRef,
     )
 
-    // Cancel any in-flight position interpolation; we'll start a new one
-    // below if anything actually moves.
+    // Cancel any in-flight transitions; we'll start fresh ones below.
     if (animRafRef.current !== null) {
       cancelAnimationFrame(animRafRef.current)
       animRafRef.current = null
     }
+    if (edgeCleanupTimeoutRef.current !== null) {
+      clearTimeout(edgeCleanupTimeoutRef.current)
+      edgeCleanupTimeoutRef.current = null
+    }
 
-    // Ghost nodes for the exit fade: any previously rendered node whose id is
-    // not in the new (remapped) set gets re-included with phase='exiting'.
+    // Exiting nodes: previously rendered, not in the new set. Marked with
+    // phase='exiting' so MonsterNode's Tailwind transition fades opacity to 0.
     const prevCommitted = prevNodesRef.current
     const newIds = new Set(remappedNodes.map(n => n.id))
     const exiting: Node<MonsterNodeData>[] = prevCommitted
       .filter(n => n.data.phase !== 'exiting' && !newIds.has(n.id))
       .map(n => ({ ...n, data: { ...n.data, phase: 'exiting' as const } }))
 
-    // Persistent nodes share their React-Flow id with a node from the prev
-    // commit; their last-rendered position is the FROM for this transition.
-    // Fresh nodes have a freshly-minted id (no entry here) and start at their
-    // canonical (TO) position — they fade in via the dq-node-appear keyframe.
+    // Exiting edges: previously rendered, not in remappedEdges. Tagged with
+    // className 'exiting-edge' so CSS fades opacity 1→0; stripped from state
+    // by edgeCleanupTimeoutRef after FADE_OUT_MS.
+    const newEdgeIds = new Set(remappedEdges.map(e => e.id))
+    const exitingEdges: Edge[] = prevEdgesRef.current
+      .filter(e => !newEdgeIds.has(e.id))
+      .map(e => ({ ...e, className: 'exiting-edge' }))
+
+    // Persistent-node FROM positions: same React-Flow id, last-rendered pos.
     const prevPosByRfId = new Map<string, { x: number; y: number }>()
     for (const p of prevCommitted) {
       if (p.data.phase === 'exiting') continue
       prevPosByRfId.set(p.id, p.position)
     }
 
-    // Initial commit places persistent nodes at their FROM position so the
-    // RAF tick can animate them to canonical without a perceptible jump on
-    // the first frame.
-    const initialNodes: Node<MonsterNodeData>[] = remappedNodes.map(n => {
-      const from = prevPosByRfId.get(n.id)
-      return from ? { ...n, position: from } : n
-    })
-
-    setNodes([...initialNodes, ...exiting])
-    setEdges(remappedEdges)
-    prevEdgeIdsRef.current = new Set(remappedEdges.map(e => e.id))
-    prevNodesRef.current = initialNodes
-
-    // Build the per-node animation table. Skip persistent nodes whose position
-    // didn't actually change (cycle/fold typically produce zero movement for
-    // most of the tree).
+    // Per-node animation table for phase 1 movement (only persistent nodes
+    // that actually move).
     const animations: Array<{ id: string; from: { x: number; y: number }; to: { x: number; y: number } }> = []
     for (const n of remappedNodes) {
       const from = prevPosByRfId.get(n.id)
@@ -818,18 +755,60 @@ export default function SynthesisViewer() {
       animations.push({ id: n.id, from, to: n.position })
     }
 
+    // Tag fresh nodes/edges with className so CSS fade-in only fires on them.
+    // Persistent elements never carry a fresh-* class, so changes to the
+    // wrapper's --fade-in-delay variable can't re-trigger their animations.
+    const taggedNodes: Node<MonsterNodeData>[] = remappedNodes.map(n => {
+      if (prevPosByRfId.has(n.id)) return n
+      return { ...n, className: 'fresh-node' }
+    })
+    const taggedEdges: Edge[] = remappedEdges.map(e => {
+      if (prevEdgesRef.current.some(p => p.id === e.id)) return e
+      return { ...e, className: 'fresh-edge' }
+    })
+
+    // Initial commit: persistent at FROM, fresh at canonical. Persistent
+    // moves from FROM to canonical via RAF (phase 1, parallel to camera pan
+    // and fade-out). Fresh stays invisible until the CSS animation-delay
+    // elapses (phase 2).
+    const initialNodes: Node<MonsterNodeData>[] = taggedNodes.map(n => {
+      const from = prevPosByRfId.get(n.id)
+      return from ? { ...n, position: from } : n
+    })
+
+    // Fresh fade-in waits for the position-move phase to settle. If there
+    // are no moves (initial render, cycle, fold), fresh fades in immediately.
+    const fadeInDelayMs = animations.length > 0 ? PAN_MS : 0
+    if (containerRef.current) {
+      containerRef.current.style.setProperty('--fade-in-delay', `${fadeInDelayMs}ms`)
+    }
+
+    setNodes([...initialNodes, ...exiting])
+    setEdges([...taggedEdges, ...exitingEdges])
+    prevEdgesRef.current = remappedEdges
+    prevNodesRef.current = initialNodes
+
+    // Strip exiting edges after their fade-out keyframe completes.
+    if (exitingEdges.length > 0) {
+      const exitingEdgeIds = new Set(exitingEdges.map(e => e.id))
+      edgeCleanupTimeoutRef.current = window.setTimeout(() => {
+        edgeCleanupTimeoutRef.current = null
+        setEdges(curr => curr.filter(e => !exitingEdgeIds.has(e.id)))
+      }, FADE_OUT_MS)
+    }
+
     if (animations.length > 0) {
       let working: Node<MonsterNodeData>[] = initialNodes
       let startedAt: number | null = null
       const tick = (now: number) => {
         if (startedAt === null) startedAt = now
         const t = Math.min(1, (now - startedAt) / PAN_MS)
-        const e = easeCss(t)
+        const eased = easeCss(t)
         const updated = new Map<string, { x: number; y: number }>()
         for (const a of animations) {
           updated.set(a.id, {
-            x: a.from.x + (a.to.x - a.from.x) * e,
-            y: a.from.y + (a.to.y - a.from.y) * e,
+            x: a.from.x + (a.to.x - a.from.x) * eased,
+            y: a.from.y + (a.to.y - a.from.y) * eased,
           })
         }
         working = working.map(n => {
@@ -857,7 +836,7 @@ export default function SynthesisViewer() {
       exitTimeoutRef.current = window.setTimeout(() => {
         setNodes(curr => curr.filter(n => n.data.phase !== 'exiting'))
         exitTimeoutRef.current = null
-      }, FADE_MS)
+      }, FADE_OUT_MS)
     }
 
     // Viewport. For nav the camera pan was started in the handler alongside
@@ -907,11 +886,22 @@ export default function SynthesisViewer() {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        .react-flow__node {
-          animation: dq-node-appear ${FADE_MS}ms ease-out;
+        @keyframes dq-edge-fade-out {
+          from { opacity: 1; }
+          to { opacity: 0; }
         }
-        .react-flow__edge {
-          animation: dq-edge-appear ${FADE_MS}ms ease-out;
+        /* Fade-in rules apply ONLY to fresh elements (tagged in JS at render
+           time). Persistent elements never carry these classes, so a change
+           to --fade-in-delay cannot re-trigger their animation. fill-mode
+           backwards keeps the element at opacity 0 during the delay window. */
+        .react-flow__node.fresh-node {
+          animation: dq-node-appear ${FADE_IN_MS}ms ease-out var(--fade-in-delay, 0ms) backwards;
+        }
+        .react-flow__edge.fresh-edge {
+          animation: dq-edge-appear ${FADE_IN_MS}ms ease-out var(--fade-in-delay, 0ms) backwards;
+        }
+        .react-flow__edge.exiting-edge {
+          animation: dq-edge-fade-out ${FADE_OUT_MS}ms ease-out forwards;
         }
         .react-flow__controls {
           box-shadow: none !important;

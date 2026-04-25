@@ -51,11 +51,11 @@ interface Recipe  { result: string; parent1: string; parent2: string }
 `SynthesisViewer.tsx` is one large single file on purpose; splitting it would add prop-drilling across layout, state, keyboard, and viewport concerns that all coordinate in one effect. Don't split it unless you have a clean seam.
 
 Logical sections, top-to-bottom:
-- **Edge / node type defs** — `FlowingEdge` (animated bezier). All graph nodes use the single `monster` type; context nodes (parent/sibling) are regular monster nodes flagged with `data.isContext`.
+- **Edge / node type defs** — `FlowingEdge` (animated bezier). All graph nodes use the single `monster` type; the ctx-parent (when nav history is non-empty) is a regular monster node added by `injectContext`.
 - **`fullLeafCount(name, ancestors, recipeIndices, memo, isRoot)`** — recursive leaf counter with cycle-break via ancestors set and a memo. `isRoot=true` forces recursion even into base monsters.
 - **`buildGraph(rootName, recipeIndices, maxDepth, onMakeRoot, onCycleRecipe)`** — DFS from root, emits nodes + edges. `nodeId` is either the lowercase monster name (root) or `${parentEdgeLabel}:${key}` for descendants — this is how the same monster appearing twice gets distinct nodes. Edges go source=result → target=ingredient (i.e. bottom to top visually).
 - **`layoutNodes(nodes, edges)`** — BFS for y-depth, post-order x assignment so each result centers under its ingredients.
-- **`SynthesisViewer` component** — state, effects, keyboard, context-sibling injection, viewport control.
+- **`SynthesisViewer` component** — state, effects, keyboard, ctx-parent injection, viewport control.
 
 **State owned by the component:**
 - `root: string | null` — current root monster name (title case).
@@ -65,7 +65,7 @@ Logical sections, top-to-bottom:
 - `maxDepth: number` — 1–8.
 - React Flow's own `nodes`/`edges` state (via `useNodesState`/`useEdgesState`).
 
-**Context-sibling injection:** when `navHistory` is non-empty, the main effect adds two synthetic nodes (`__ctx_parent__:<key>`, `__ctx_sibling__:<key>`) and two edges so the user sees where they came from. Any code that walks `nodes` and assumes nodeIds are monster keys must handle these two id shapes. The sibling carries `data.isContext = true`, which dims the card and suppresses the fold / recipe-cycle buttons (they'd silently mutate state for a node that isn't actually expanded here). The sibling is positioned at `treeMaxX ± NODE_W` — one layout slot past the current tree's leaf extent — so the dashed parent→sibling edge lands on a card at the spot `layoutNodes` would have produced if the parent were laid out as root.
+**Ctx-parent injection:** when `navHistory` is non-empty, `injectContext` adds one synthetic node (`__ctx_parent__:<key>`) and one parent→focus edge so the user sees where they came from. Any code that walks `nodes` and assumes nodeIds are monster keys must handle the `__ctx_parent__:<key>` id shape. The parent sits directly above the focus (`parentX = rootX`, `parentY = rootY + NODE_H`). The opposite-side child of the parent is intentionally NOT rendered — `navigateBack` brings it into view as a normal depth-1 node when the user goes up.
 
 **Viewport control is manual.** `fitView` is not used — the effect computes a viewport that places the root near the bottom with room above. Zoom is only reset when `root` changes; cycling a recipe keeps the current zoom. If you add a new trigger that should reset zoom, update the `isNewRoot` check.
 
@@ -81,7 +81,7 @@ Logical sections, top-to-bottom:
 
 **`nodeId` parsing** — `handleCycleRecipe` recovers the monster key via `nodeId.split(':').at(-1)!`. If you change the nodeId format in `buildGraph`, this breaks silently (wrong recipe cycles).
 
-**Context nodes are not part of the current tree.** `__ctx_parent__:<key>` and `__ctx_sibling__:<key>` both have `type: 'monster'` and render as regular `MonsterNode`s; they are distinguished by `data.isContext === true`. When counting or filtering "real" tree nodes, exclude them via that flag (the "{N} monsters" counter does this).
+**The ctx-parent node is not part of the current tree.** `__ctx_parent__:<key>` has `type: 'monster'` and renders as a regular `MonsterNode`. When counting or filtering "real" tree nodes, recognise it by the `__ctx_parent__:` id prefix.
 
 **`SynthesisViewerLoader` exists for a reason.** `@xyflow/react` + this file's sessionStorage access are client-only. `page.tsx` imports the loader, which `dynamic(..., { ssr: false })`s the viewer. Do not import `SynthesisViewer` directly into a server component.
 
