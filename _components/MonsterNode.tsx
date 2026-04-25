@@ -50,7 +50,10 @@ export default function MonsterNode({ data }: { data: MonsterNodeData }) {
   const ctxCls = data.isContext ? 'opacity-60 hover:opacity-100' : ''
 
   return (
-    <div className={`group relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md px-3 py-2.5 shadow-2xl transition-all duration-[350ms] hover:scale-[1.02] hover:border-white/30 hover:shadow-white/5 w-[180px] ${ctxCls} ${data.phase === 'exiting' ? 'opacity-0 pointer-events-none scale-95' : ''}`}>
+    <div
+      className={`group relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md px-3 py-2.5 shadow-2xl hover:scale-[1.02] hover:border-white/30 hover:shadow-white/5 w-[180px] ${ctxCls} ${data.phase === 'exiting' ? 'opacity-0 pointer-events-none scale-95' : ''}`}
+      style={{ transition: `opacity var(--fade-out-ms, 350ms) ease-out, transform var(--fade-out-ms, 350ms) ease-out, border-color 200ms, box-shadow 200ms` }}
+    >
       <style jsx>{`
         @keyframes pulse-subtle {
           0%, 100% { opacity: 1; transform: scale(1); }
