@@ -462,6 +462,25 @@ function assignNodeIds(
   return { nodes, edges }
 }
 
+// Inverts a `cubic-bezier(0.45, 0, 0.2, 1)` curve at parameter t ∈ [0, 1] —
+// matches the easing the previous CSS `transition: transform` rule used.
+// Newton iteration to solve x(s) = t, then evaluate y(s).
+function easeCss(t: number): number {
+  if (t <= 0) return 0
+  if (t >= 1) return 1
+  const p1 = 0.45, p2 = 0.2
+  let s = t
+  for (let i = 0; i < 5; i++) {
+    const omS = 1 - s
+    const x = 3 * omS * omS * s * p1 + 3 * omS * s * s * p2 + s * s * s
+    const dx = 3 * (omS * omS * p1 + 2 * omS * s * (p2 - p1) + s * s * (1 - p2))
+    if (Math.abs(dx) < 1e-6) break
+    s = Math.max(0, Math.min(1, s - (x - t) / dx))
+  }
+  const omS = 1 - s
+  return 3 * omS * s * s + s * s * s
+}
+
 export default function SynthesisViewer() {
   const [root, setRoot] = useState<string | null>(null)
   const [recipeIndices, setRecipeIndices] = useState<Record<string, number>>(() => {
@@ -507,10 +526,16 @@ export default function SynthesisViewer() {
   const offsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const navActionRef = useRef<NavAction>({ type: 'reset' })
   const exitTimeoutRef = useRef<number | null>(null)
-  // Holds the RAF that promotes fresh nodes from their stage-1 "from" position
-  // (their nearest persistent ancestor's prev position) to their canonical
-  // position. Cancelled if a new nav lands before the second frame paints.
-  const stage2RafRef = useRef<number | null>(null)
+  // Handle for the running position-interpolation RAF loop. We drive node
+  // positions in JS (not via CSS `transition: transform`) so that React Flow
+  // recomputes edge paths on every frame — otherwise edges would snap to the
+  // new endpoints while the visual node is still mid-flight.
+  const animRafRef = useRef<number | null>(null)
+  // Edge ids from the last commit. Used for fresh-edge detection (not strictly
+  // needed for behaviour today since CSS targets all `.react-flow__edge` and
+  // the keyframe only fires on first mount, but kept as a hook in case we
+  // later want to differentiate fresh vs. persistent edges in JS).
+  const prevEdgeIdsRef = useRef<Set<string>>(new Set())
   const resetViewportRef = useRef<boolean>(true)
   const prevNodesRef = useRef<Node<MonsterNodeData>[]>([])
   // Monotonic counter for fresh React-Flow node ids. Using sequential ids
@@ -709,7 +734,7 @@ export default function SynthesisViewer() {
   useEffect(() => {
     return () => {
       if (exitTimeoutRef.current !== null) clearTimeout(exitTimeoutRef.current)
-      if (stage2RafRef.current !== null) cancelAnimationFrame(stage2RafRef.current)
+      if (animRafRef.current !== null) cancelAnimationFrame(animRafRef.current)
     }
   }, [])
 
@@ -744,6 +769,13 @@ export default function SynthesisViewer() {
       idCounterRef,
     )
 
+    // Cancel any in-flight position interpolation; we'll start a new one
+    // below if anything actually moves.
+    if (animRafRef.current !== null) {
+      cancelAnimationFrame(animRafRef.current)
+      animRafRef.current = null
+    }
+
     // Ghost nodes for the exit fade: any previously rendered node whose id is
     // not in the new (remapped) set gets re-included with phase='exiting'.
     const prevCommitted = prevNodesRef.current
@@ -752,67 +784,72 @@ export default function SynthesisViewer() {
       .filter(n => n.data.phase !== 'exiting' && !newIds.has(n.id))
       .map(n => ({ ...n, data: { ...n.data, phase: 'exiting' as const } }))
 
-    // Stage-1 / stage-2 commit. Fresh nodes (no persistent counterpart in the
-    // prev render) initially mount at their nearest persistent ancestor's
-    // *prev* world position, then on the next paint we update them to their
-    // canonical position so the CSS `transition: transform` fires. This makes
-    // a freshly expanded subtree (e.g. the formerly-ctx-sibling subtree on
-    // nav-back) slide outward from its parent in lockstep with the persistent
-    // nodes' transitions, rather than snapping into existence at their tight
-    // depth-N slot positions.
-    if (stage2RafRef.current !== null) {
-      cancelAnimationFrame(stage2RafRef.current)
-      stage2RafRef.current = null
-    }
-    const prevPosByPrevNid = new Map<string, { x: number; y: number }>()
+    // Persistent nodes share their React-Flow id with a node from the prev
+    // commit; their last-rendered position is the FROM for this transition.
+    // Fresh nodes have a freshly-minted id (no entry here) and start at their
+    // canonical (TO) position — they fade in via the dq-node-appear keyframe.
+    const prevPosByRfId = new Map<string, { x: number; y: number }>()
     for (const p of prevCommitted) {
       if (p.data.phase === 'exiting') continue
-      prevPosByPrevNid.set(p.data.nodeId, p.position)
+      prevPosByRfId.set(p.id, p.position)
     }
-    const rootMatchKey = matchKeyForAction(root.toLowerCase(), action)
-    const rootFallback = prevPosByPrevNid.get(rootMatchKey) ?? null
-    const fromPositionFor = (freshNid: string): { x: number; y: number } | null => {
-      let cur = freshNid
-      while (true) {
-        const idx = cur.lastIndexOf('>')
-        if (idx === -1) break
-        cur = cur.slice(0, idx)
-        const pos = prevPosByPrevNid.get(matchKeyForAction(cur, action))
-        if (pos) return pos
-      }
-      return rootFallback
-    }
-    let needStage2 = false
-    const stage1Nodes = remappedNodes.map(n => {
-      if (prevPosByPrevNid.has(matchKeyForAction(n.data.nodeId, action))) return n
-      const from = fromPositionFor(n.data.nodeId)
-      if (!from) return n
-      if (from.x === n.position.x && from.y === n.position.y) return n
-      needStage2 = true
-      return { ...n, position: from }
+
+    // Initial commit places persistent nodes at their FROM position so the
+    // RAF tick can animate them to canonical without a perceptible jump on
+    // the first frame.
+    const initialNodes: Node<MonsterNodeData>[] = remappedNodes.map(n => {
+      const from = prevPosByRfId.get(n.id)
+      return from ? { ...n, position: from } : n
     })
 
-    prevNodesRef.current = remappedNodes
-
-    setNodes([...stage1Nodes, ...exiting])
+    setNodes([...initialNodes, ...exiting])
     setEdges(remappedEdges)
+    prevEdgeIdsRef.current = new Set(remappedEdges.map(e => e.id))
+    prevNodesRef.current = initialNodes
 
-    if (needStage2) {
-      stage2RafRef.current = requestAnimationFrame(() => {
-        stage2RafRef.current = requestAnimationFrame(() => {
-          stage2RafRef.current = null
-          const finalPosById = new Map<string, { x: number; y: number }>(
-            remappedNodes.map(n => [n.id, n.position]),
-          )
-          setNodes(curr => curr.map(n => {
-            if (n.data.phase === 'exiting') return n
-            const final = finalPosById.get(n.id)
-            if (!final) return n
-            if (final.x === n.position.x && final.y === n.position.y) return n
-            return { ...n, position: final }
-          }))
+    // Build the per-node animation table. Skip persistent nodes whose position
+    // didn't actually change (cycle/fold typically produce zero movement for
+    // most of the tree).
+    const animations: Array<{ id: string; from: { x: number; y: number }; to: { x: number; y: number } }> = []
+    for (const n of remappedNodes) {
+      const from = prevPosByRfId.get(n.id)
+      if (!from) continue
+      if (from.x === n.position.x && from.y === n.position.y) continue
+      animations.push({ id: n.id, from, to: n.position })
+    }
+
+    if (animations.length > 0) {
+      let working: Node<MonsterNodeData>[] = initialNodes
+      let startedAt: number | null = null
+      const tick = (now: number) => {
+        if (startedAt === null) startedAt = now
+        const t = Math.min(1, (now - startedAt) / PAN_MS)
+        const e = easeCss(t)
+        const updated = new Map<string, { x: number; y: number }>()
+        for (const a of animations) {
+          updated.set(a.id, {
+            x: a.from.x + (a.to.x - a.from.x) * e,
+            y: a.from.y + (a.to.y - a.from.y) * e,
+          })
+        }
+        working = working.map(n => {
+          const u = updated.get(n.id)
+          return u ? { ...n, position: u } : n
         })
-      })
+        prevNodesRef.current = working
+        const workingById = new Map(working.map(n => [n.id, n]))
+        setNodes(curr => curr.map(n => {
+          if (n.data.phase === 'exiting') return n
+          const w = workingById.get(n.id)
+          return w ?? n
+        }))
+        if (t < 1) {
+          animRafRef.current = requestAnimationFrame(tick)
+        } else {
+          animRafRef.current = null
+        }
+      }
+      animRafRef.current = requestAnimationFrame(tick)
     }
 
     if (exitTimeoutRef.current !== null) clearTimeout(exitTimeoutRef.current)
@@ -866,9 +903,15 @@ export default function SynthesisViewer() {
           from { opacity: 0; }
           to { opacity: 1; }
         }
+        @keyframes dq-edge-appear {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
         .react-flow__node {
           animation: dq-node-appear ${FADE_MS}ms ease-out;
-          transition: transform ${PAN_MS}ms cubic-bezier(0.45, 0, 0.2, 1);
+        }
+        .react-flow__edge {
+          animation: dq-edge-appear ${FADE_MS}ms ease-out;
         }
         .react-flow__controls {
           box-shadow: none !important;
