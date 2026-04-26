@@ -29,9 +29,9 @@ const VIEW_PADDING = 24
 // exit fade-out for nodes/edges no longer in the new tree.
 // Phase 2 (sequential, t = PAN_MS..PAN_MS + FADE_IN_MS): fresh nodes/edges
 // fade in.
-const PAN_MS = 5000
-const FADE_OUT_MS = 5000
-const FADE_IN_MS = 5000
+const PAN_MS = 350
+const FADE_OUT_MS = 350
+const FADE_IN_MS = 350
 // Fixed 4-level tree (depths 0..3): 1 + 2 + 4 + 8 = 15 slots. Every node
 // reserves its canonical slot so the layout stays identical across
 // navigations — gaps appear where a subtree is shorter, rather than sibling
