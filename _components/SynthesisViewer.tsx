@@ -242,7 +242,7 @@ function injectContext(
   const parentEntry = navHistory.length > 0 ? navHistory[navHistory.length - 1] : null
   if (!parentEntry) return { nodes: [...laid], edges: [...edges] }
 
-  const { parent, recipeIdx } = parentEntry
+  const { parent, recipeIdx, isParent1 } = parentEntry
   const parentKey = parent.toLowerCase()
   const parentRecipes = recipesByResult.get(parentKey) ?? []
   const safeIdx = Math.min(recipeIdx, Math.max(0, parentRecipes.length - 1))
@@ -251,9 +251,14 @@ function injectContext(
 
   if (!rootNode) return { nodes: [...laid], edges: [...edges] }
 
-  // Parent sits directly above the focus, one NODE_H higher in world coords
-  // (which renders below in screen space, since +y is down in React Flow).
-  const parentX = rootNode.position.x
+  // Park the parent on the side opposite the descent direction, matching
+  // the depth-1 slot offset (2 * NODE_W). Going into the right child
+  // (isParent1=false) leaves the parent below-left; going into the left
+  // child (isParent1=true) leaves it below-right. With this offset the
+  // parent's world position equals where it sat as the previous root, so
+  // it doesn't move during the transition — it just sits where it was
+  // while the new focus rises into the centre.
+  const parentX = rootNode.position.x + (isParent1 ? 2 * NODE_W : -2 * NODE_W)
   const parentY = rootNode.position.y + NODE_H
 
   const parentNodeId = `__ctx_parent__:${parentKey}`
@@ -620,13 +625,14 @@ export default function SynthesisViewer() {
     const prev = history[history.length - 1]
     const prevDir: 'p1' | 'p2' = prev.isParent1 ? 'p1' : 'p2'
 
-    // Ctx parent now sits directly above the focus (no horizontal sibling
-    // offset), so the new world position the new root lands at is just
-    // (prevOffset.x, prevOffset.y + NODE_H). prevDir is still tracked for
-    // matchKeyForAction's persistent-id remap.
+    // The ctx parent currently sits offset to the side opposite the
+    // descent direction (see injectContext). Mirror that here so the new
+    // root lands on the parent's actual world position — keeping the
+    // formerly-current node anchored in place during the back-nav.
+    const sideOffset = prev.isParent1 ? 2 * NODE_W : -2 * NODE_W
     const prevOffset = offsetRef.current
     const newOffset = {
-      x: prevOffset.x,
+      x: prevOffset.x + sideOffset,
       y: prevOffset.y + NODE_H,
     }
 
