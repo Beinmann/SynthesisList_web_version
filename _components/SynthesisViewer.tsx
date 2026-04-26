@@ -32,6 +32,12 @@ const VIEW_PADDING = 24
 const PAN_MS = 350
 const FADE_OUT_MS = 350
 const FADE_IN_MS = 350
+// Edges start fading in slightly before the fresh nodes they connect.
+// The dark edge stroke against the near-black canvas is below visual
+// threshold for a good chunk of its opacity ramp, whereas the bright
+// node cards register almost immediately — without a head start the
+// edges feel like they pop in noticeably after the nodes.
+const EDGE_FADE_HEAD_START_MS = 120
 // Fixed 4-level tree (depths 0..3): 1 + 2 + 4 + 8 = 15 slots. Every node
 // reserves its canonical slot so the layout stays identical across
 // navigations — gaps appear where a subtree is shorter, rather than sibling
@@ -784,9 +790,13 @@ export default function SynthesisViewer() {
 
     // Fresh fade-in waits for the position-move phase to settle. If there
     // are no moves (initial render, cycle, fold), fresh fades in immediately.
+    // Fresh edges get a head start so they cross the visual threshold around
+    // the same time the fresh nodes do (see EDGE_FADE_HEAD_START_MS).
     const fadeInDelayMs = animations.length > 0 ? PAN_MS : 0
+    const edgeFadeInDelayMs = Math.max(0, fadeInDelayMs - EDGE_FADE_HEAD_START_MS)
     if (containerRef.current) {
       containerRef.current.style.setProperty('--fade-in-delay', `${fadeInDelayMs}ms`)
+      containerRef.current.style.setProperty('--edge-fade-in-delay', `${edgeFadeInDelayMs}ms`)
     }
 
     setNodes([...initialNodes, ...exiting])
@@ -904,7 +914,7 @@ export default function SynthesisViewer() {
           animation: dq-node-appear ${FADE_IN_MS}ms ease-out var(--fade-in-delay, 0ms) backwards;
         }
         .react-flow__edge.fresh-edge {
-          animation: dq-edge-appear ${FADE_IN_MS}ms ease-out var(--fade-in-delay, 0ms) backwards;
+          animation: dq-edge-appear ${FADE_IN_MS}ms ease-out var(--edge-fade-in-delay, 0ms) backwards;
         }
         .react-flow__edge.exiting-edge {
           animation: dq-edge-fade-out ${FADE_OUT_MS}ms ease-out forwards;
