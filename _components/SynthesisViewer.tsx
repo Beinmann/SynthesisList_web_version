@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow,
   Background,
@@ -19,6 +19,7 @@ import '@xyflow/react/dist/style.css'
 import MonsterNode, { type MonsterNodeData } from './MonsterNode'
 import MonsterSearch from './MonsterSearch'
 import FeaturedMonsters from './FeaturedMonsters'
+import GlobalEffortMap from './GlobalEffortMap'
 import { monsterByName, recipesByResult } from './_data'
 import type { Rank, MonsterType } from './_data'
 
@@ -461,6 +462,7 @@ export default function SynthesisViewer() {
     return {}
   })
   const [navHistory, setNavHistory] = useState<NavEntry[]>([])
+  const [showEffortMap, setShowEffortMap] = useState(false)
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<MonsterNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -884,6 +886,18 @@ export default function SynthesisViewer() {
     }
   }, [root, recipeIndices, foldedRecipes, navHistory, handleMakeRoot, handleCycleRecipe, handleToggleFold, setNodes, setEdges])
 
+  // Only computed when the effort map is visible — keeps the toggled-off case
+  // free. Derived from buildGraph (no handlers needed), not from `nodes`, so
+  // animation-frame mutations of `nodes` don't churn this set.
+  const visibleNodeIds = useMemo(() => {
+    if (!showEffortMap || !root) return new Set<string>()
+    const noop = () => {}
+    const built = buildGraph(root, recipeIndices, foldedRecipes, noop, noop, noop)
+    const s = new Set<string>()
+    for (const n of built.nodes) s.add(n.data.nodeId)
+    return s
+  }, [showEffortMap, root, recipeIndices, foldedRecipes])
+
   return (
     <div className="flex flex-col gap-4 relative">
       <style jsx global>{`
@@ -995,9 +1009,31 @@ export default function SynthesisViewer() {
               )
             })()}
 
-            <div className="absolute top-6 right-6 z-10 text-right pointer-events-none">
-              <div className="text-xs font-black text-white/20 uppercase tracking-[0.2em] mb-1">DQMJ2 Synthesis</div>
-              <div className="text-[10px] font-medium text-zinc-600">Experimental Protocol v2.0</div>
+            <div className="absolute top-6 right-6 z-10 flex flex-col items-end gap-3 pointer-events-none">
+              <div className="text-right">
+                <div className="text-xs font-black text-white/20 uppercase tracking-[0.2em] mb-1">DQMJ2 Synthesis</div>
+                <div className="text-[10px] font-medium text-zinc-600">Experimental Protocol v2.0</div>
+              </div>
+              <button
+                onClick={() => setShowEffortMap(s => !s)}
+                title={showEffortMap ? 'Hide effort map' : 'Show effort map'}
+                className="pointer-events-auto flex items-center gap-1.5 bg-white/5 backdrop-blur-md border border-white/10 hover:border-white/30 rounded-lg px-2.5 py-1.5 text-[10px] uppercase tracking-widest text-zinc-300 hover:text-white transition-colors"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M3 12h18M3 20h18" />
+                </svg>
+                <span>Effort Map</span>
+                <span className="text-zinc-500">{showEffortMap ? '−' : '+'}</span>
+              </button>
+              {showEffortMap && (
+                <div className="pointer-events-auto">
+                  <GlobalEffortMap
+                    rootName={root}
+                    recipeIndices={recipeIndices}
+                    visibleNodeIds={visibleNodeIds}
+                  />
+                </div>
+              )}
             </div>
 
             <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
