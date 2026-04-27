@@ -945,22 +945,55 @@ export default function SynthesisViewer() {
               </div>
             </div>
 
-            {navHistory.length > 0 && (
-              <div className="absolute bottom-6 left-6 z-10 pointer-events-auto">
-                 <button
-                  onClick={navigateBack}
-                  className="group flex items-center gap-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-2 px-4 transition-all shadow-xl"
-                >
-                  <svg className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                  </svg>
-                  <div className="flex flex-col items-start">
-                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter leading-none">Go Back</span>
-                    <span className="text-xs text-zinc-200 font-medium truncate max-w-[120px]">{navHistory.at(-1)!.parent}</span>
+            {(() => {
+              const rootKey = root.toLowerCase()
+              const recipes = recipesByResult.get(rootKey) ?? []
+              const idx = Math.min(recipeIndices[rootKey] ?? 0, Math.max(0, recipes.length - 1))
+              const recipe = recipes[idx]
+              const leftName = recipe?.parent1
+              const rightName = recipe?.parent2
+              const backName = navHistory.at(-1)?.parent
+              const cellClass = "group flex flex-col items-center gap-1 px-4 py-2 min-w-[88px] hover:bg-white/10 disabled:hover:bg-transparent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              return (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
+                  <div className="flex bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden divide-x divide-white/10">
+                    <button
+                      onClick={() => navigateToChild('left')}
+                      disabled={!leftName}
+                      title={leftName ? `Go to ${leftName}` : 'No recipe'}
+                      className={cellClass}
+                    >
+                      <svg className="w-4 h-4 text-zinc-400 group-enabled:group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19L3 12m0 0l7-7m-7 7h18" />
+                      </svg>
+                      <span className="text-[10px] text-zinc-200 font-medium truncate max-w-[80px] leading-none">{leftName ?? '—'}</span>
+                    </button>
+                    <button
+                      onClick={navigateBack}
+                      disabled={!backName}
+                      title={backName ? `Back to ${backName}` : 'No history'}
+                      className={cellClass}
+                    >
+                      <svg className="w-4 h-4 text-zinc-400 group-enabled:group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                      <span className="text-[10px] text-zinc-200 font-medium truncate max-w-[80px] leading-none">{backName ?? 'Back'}</span>
+                    </button>
+                    <button
+                      onClick={() => navigateToChild('right')}
+                      disabled={!rightName}
+                      title={rightName ? `Go to ${rightName}` : 'No recipe'}
+                      className={cellClass}
+                    >
+                      <svg className="w-4 h-4 text-zinc-400 group-enabled:group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                      <span className="text-[10px] text-zinc-200 font-medium truncate max-w-[80px] leading-none">{rightName ?? '—'}</span>
+                    </button>
                   </div>
-                </button>
-              </div>
-            )}
+                </div>
+              )
+            })()}
 
             <div className="absolute top-6 right-6 z-10 text-right pointer-events-none">
               <div className="text-xs font-black text-white/20 uppercase tracking-[0.2em] mb-1">DQMJ2 Synthesis</div>
