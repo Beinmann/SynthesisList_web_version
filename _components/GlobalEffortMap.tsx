@@ -134,35 +134,42 @@ export default function GlobalEffortMap({
   recipeIndices,
   visibleNodeIds,
 }: Props) {
-  if (!enabled) {
-    return (
-      <button
-        onClick={onToggle}
-        title="Show effort map"
-        style={{ height: totalHeight, width: COLLAPSED_W }}
-        className="flex flex-col items-center justify-start gap-3 py-4 rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md hover:border-white/30 text-zinc-400 hover:text-white transition-colors"
-      >
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        <span
-          className="text-[10px] uppercase tracking-widest font-semibold"
-          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-        >
-          Effort Map
-        </span>
-      </button>
-    )
-  }
-
+  // The wrapper reserves only COLLAPSED_W in the flex flow at all times.
+  // The actual button (collapsed) or panel (expanded) is absolutely
+  // positioned within, anchored to the right edge — so the expanded panel
+  // overlays the main viewer's right edge instead of squeezing it.
   return (
-    <ExpandedEffortMap
-      onToggle={onToggle}
-      totalHeight={totalHeight}
-      rootName={rootName}
-      recipeIndices={recipeIndices}
-      visibleNodeIds={visibleNodeIds}
-    />
+    <div
+      className="relative shrink-0"
+      style={{ width: COLLAPSED_W, height: totalHeight }}
+    >
+      {!enabled ? (
+        <button
+          onClick={onToggle}
+          title="Show effort map"
+          style={{ height: totalHeight, width: COLLAPSED_W }}
+          className="absolute right-0 top-0 z-40 flex flex-col items-center justify-start gap-3 py-4 rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md hover:border-white/30 text-zinc-400 hover:text-white transition-colors"
+        >
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span
+            className="text-[10px] uppercase tracking-widest font-semibold"
+            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+          >
+            Effort Map
+          </span>
+        </button>
+      ) : (
+        <ExpandedEffortMap
+          onToggle={onToggle}
+          totalHeight={totalHeight}
+          rootName={rootName}
+          recipeIndices={recipeIndices}
+          visibleNodeIds={visibleNodeIds}
+        />
+      )}
+    </div>
   )
 }
 
@@ -203,7 +210,7 @@ function ExpandedEffortMap({
 
   return (
     <div
-      className="rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md shadow-2xl overflow-hidden flex flex-col"
+      className="absolute right-0 top-0 z-40 rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md shadow-2xl overflow-hidden flex flex-col"
       style={{ width: PANEL_W, height: totalHeight }}
     >
       <div className="px-3 py-2 border-b border-white/5" style={{ height: HEADER_H }}>
