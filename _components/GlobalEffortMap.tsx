@@ -5,8 +5,9 @@ import { monsterByName, recipesByResult } from './_data'
 import type { MonsterType } from './_data'
 
 const PANEL_W = 280
-const STAT_H = 64
-const ICICLE_H = 360
+const COLLAPSED_W = 36
+const HEADER_H = 64
+const FOOTER_H = 32
 
 const TYPE_COLORS: Record<MonsterType, string> = {
   slime: '#60a5fa',
@@ -117,15 +118,74 @@ function layoutIcicle(root: IcicleNode, panelW: number, panelH: number): {
 }
 
 interface Props {
+  enabled: boolean
+  onToggle: () => void
+  totalHeight: number
   rootName: string
   recipeIndices: Record<string, number>
   visibleNodeIds: Set<string>
 }
 
-export default function GlobalEffortMap({ rootName, recipeIndices, visibleNodeIds }: Props) {
+export default function GlobalEffortMap({
+  enabled,
+  onToggle,
+  totalHeight,
+  rootName,
+  recipeIndices,
+  visibleNodeIds,
+}: Props) {
+  if (!enabled) {
+    return (
+      <button
+        onClick={onToggle}
+        title="Show effort map"
+        style={{ height: totalHeight, width: COLLAPSED_W }}
+        className="flex flex-col items-center justify-start gap-3 py-4 rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md hover:border-white/30 text-zinc-400 hover:text-white transition-colors"
+      >
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        <span
+          className="text-[10px] uppercase tracking-widest font-semibold"
+          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+        >
+          Effort Map
+        </span>
+      </button>
+    )
+  }
+
+  return (
+    <ExpandedEffortMap
+      onToggle={onToggle}
+      totalHeight={totalHeight}
+      rootName={rootName}
+      recipeIndices={recipeIndices}
+      visibleNodeIds={visibleNodeIds}
+    />
+  )
+}
+
+interface ExpandedProps {
+  onToggle: () => void
+  totalHeight: number
+  rootName: string
+  recipeIndices: Record<string, number>
+  visibleNodeIds: Set<string>
+}
+
+function ExpandedEffortMap({
+  onToggle,
+  totalHeight,
+  rootName,
+  recipeIndices,
+  visibleNodeIds,
+}: ExpandedProps) {
+  const icicleH = Math.max(120, totalHeight - HEADER_H - FOOTER_H)
+
   const { rects, maxDepth, totalNodes, totalLeaves, visibleCount } = useMemo(() => {
     const tree = buildAncestorTree(rootName, recipeIndices)
-    const laid = layoutIcicle(tree, PANEL_W, ICICLE_H)
+    const laid = layoutIcicle(tree, PANEL_W, icicleH)
     let visibleCount = 0
     for (const r of laid.rects) {
       if (visibleNodeIds.has(r.node.nodeId)) visibleCount += 1
@@ -137,17 +197,28 @@ export default function GlobalEffortMap({ rootName, recipeIndices, visibleNodeId
       totalLeaves: tree.leafCount,
       visibleCount,
     }
-  }, [rootName, recipeIndices, visibleNodeIds])
+  }, [rootName, recipeIndices, visibleNodeIds, icicleH])
 
   const visiblePct = totalNodes > 0 ? Math.round((visibleCount / totalNodes) * 100) : 0
 
   return (
     <div
-      className="rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md shadow-2xl overflow-hidden"
-      style={{ width: PANEL_W }}
+      className="rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-md shadow-2xl overflow-hidden flex flex-col"
+      style={{ width: PANEL_W, height: totalHeight }}
     >
-      <div className="px-3 py-2 border-b border-white/5" style={{ height: STAT_H }}>
-        <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Effort Map</div>
+      <div className="px-3 py-2 border-b border-white/5" style={{ height: HEADER_H }}>
+        <div className="flex items-center justify-between">
+          <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Effort Map</div>
+          <button
+            onClick={onToggle}
+            title="Hide effort map"
+            className="text-zinc-500 hover:text-white transition-colors -mr-1"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
         <div className="mt-1 grid grid-cols-3 gap-2 text-[11px] text-zinc-300">
           <div>
             <div className="text-zinc-500 text-[9px] uppercase tracking-wider">Depth</div>
@@ -163,7 +234,7 @@ export default function GlobalEffortMap({ rootName, recipeIndices, visibleNodeId
           </div>
         </div>
       </div>
-      <svg width={PANEL_W} height={ICICLE_H} className="block bg-zinc-950">
+      <svg width={PANEL_W} height={icicleH} className="block bg-zinc-950 flex-1">
         {rects.map(r => {
           const isVisible = visibleNodeIds.has(r.node.nodeId)
           const fill = TYPE_COLORS[r.node.type] ?? '#a1a1aa'
@@ -189,7 +260,10 @@ export default function GlobalEffortMap({ rootName, recipeIndices, visibleNodeId
           )
         })}
       </svg>
-      <div className="px-3 py-1.5 border-t border-white/5 text-[10px] text-zinc-400 flex items-center justify-between">
+      <div
+        className="px-3 border-t border-white/5 text-[10px] text-zinc-400 flex items-center justify-between"
+        style={{ height: FOOTER_H }}
+      >
         <span>Visible</span>
         <span className="tabular-nums text-zinc-200 font-semibold">{visibleCount} / {totalNodes} ({visiblePct}%)</span>
       </div>

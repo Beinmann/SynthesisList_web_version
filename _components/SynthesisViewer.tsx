@@ -950,7 +950,8 @@ export default function SynthesisViewer() {
         }
       `}</style>
 
-      <div ref={containerRef} className="relative rounded-3xl border border-white/5 bg-zinc-950 overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]" style={{ height: 700 }}>
+      <div className="flex items-start gap-4">
+      <div ref={containerRef} className="flex-1 relative rounded-3xl border border-white/5 bg-zinc-950 overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]" style={{ height: 700 }}>
         {root ? (
           <>
             <div className="absolute top-6 left-6 z-10 flex flex-col gap-4 pointer-events-none">
@@ -1009,31 +1010,9 @@ export default function SynthesisViewer() {
               )
             })()}
 
-            <div className="absolute top-6 right-6 z-10 flex flex-col items-end gap-3 pointer-events-none">
-              <div className="text-right">
-                <div className="text-xs font-black text-white/20 uppercase tracking-[0.2em] mb-1">DQMJ2 Synthesis</div>
-                <div className="text-[10px] font-medium text-zinc-600">Experimental Protocol v2.0</div>
-              </div>
-              <button
-                onClick={() => setShowEffortMap(s => !s)}
-                title={showEffortMap ? 'Hide effort map' : 'Show effort map'}
-                className="pointer-events-auto flex items-center gap-1.5 bg-white/5 backdrop-blur-md border border-white/10 hover:border-white/30 rounded-lg px-2.5 py-1.5 text-[10px] uppercase tracking-widest text-zinc-300 hover:text-white transition-colors"
-              >
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M3 12h18M3 20h18" />
-                </svg>
-                <span>Effort Map</span>
-                <span className="text-zinc-500">{showEffortMap ? '−' : '+'}</span>
-              </button>
-              {showEffortMap && (
-                <div className="pointer-events-auto">
-                  <GlobalEffortMap
-                    rootName={root}
-                    recipeIndices={recipeIndices}
-                    visibleNodeIds={visibleNodeIds}
-                  />
-                </div>
-              )}
+            <div className="absolute top-6 right-6 z-10 text-right pointer-events-none">
+              <div className="text-xs font-black text-white/20 uppercase tracking-[0.2em] mb-1">DQMJ2 Synthesis</div>
+              <div className="text-[10px] font-medium text-zinc-600">Experimental Protocol v2.0</div>
             </div>
 
             <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
@@ -1084,6 +1063,17 @@ export default function SynthesisViewer() {
             <FeaturedMonsters onSelect={handleSelect} />
           </div>
         )}
+      </div>
+      {root && (
+        <GlobalEffortMap
+          enabled={showEffortMap}
+          onToggle={() => setShowEffortMap(s => !s)}
+          totalHeight={700}
+          rootName={root}
+          recipeIndices={recipeIndices}
+          visibleNodeIds={visibleNodeIds}
+        />
+      )}
       </div>
 
       <div className="flex items-center justify-between px-2">
